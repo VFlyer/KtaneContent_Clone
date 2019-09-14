@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -548183353, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: missionDoesItWork
+  m_EditorClassIdentifier: 
+  DisplayName: Does It Even Work?
+  Description: 'I mean, you can''t just release a broken module and expect it work.
+
+    You need to test your module both in TestHarness and in this game to ensure your
+    module works as intended.
+
+
+    This mission is meant for users without a lot of mods.
+
+'
+  GeneratorSetting:
+    TimeLimit: 7200
+    NumStrikes: 90
+    TimeBeforeNeedyActivation: 90
+    FrontFaceOnly: 0
+    OptionalWidgetCount: 5
+    ComponentPools:
+    - Count: 1
+      AllowedSources: 2
+      ComponentTypes: 
+      SpecialComponentType: 0
+      ModTypes:
+      - ubermodule
+    - Count: 10
+      AllowedSources: 1
+      ComponentTypes: 
+      SpecialComponentType: 1
+      ModTypes: []
+  PacingEventsEnabled: 1
