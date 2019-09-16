@@ -11,7 +11,7 @@ MonoBehaviour:
   m_Script: {fileID: -548183353, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: missionDoesItWork
   m_EditorClassIdentifier: 
-  DisplayName: Does It Even Work?
+  DisplayName: Does It Work?
   Description: 'I mean, you can''t just release a broken module and expect it work.
 
     You need to test your module both in TestHarness and in this game to ensure your

@@ -9,11 +9,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: -548183353, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
-  m_Name: missionDoesItIgnore
+  m_Name: missionIgnoreListLite
   m_EditorClassIdentifier: 
   DisplayName: Does It Ignore Others?
-  Description: 'This test is meant to see if Ubermodule can ignore other modules from
-    the ones shown.
+  Description: 'This test is meant to see if Ubermodule can ignore certain "last"
+    modules.
 
 
 '
