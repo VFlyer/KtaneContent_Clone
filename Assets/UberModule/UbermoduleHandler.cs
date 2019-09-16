@@ -156,21 +156,28 @@ public class UbermoduleHandler : MonoBehaviour {
 				"The Time Keeper",
 				"Timing is Everything",
 				"Turn The Key",
-				"Ubermodule"
+				"Ubermodule",
+				"Organization",
+				"Forget Them All",
+				"Forget Us Not",
+				"The Very Annoying Button",
+				"Cruel Purgatory"
 			});
 		}
 		// Ubermodule: Don't hang bombs with duplicates of THIS
 		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive.
-		// The Swan: RT Sensitive, would make sense to ignore?
-		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This: Relies on this module to be solved otherwise
+		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
+		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager
 		// Tallordered Keys: See "Forget" Modules
 		// Hogwarts, Divided, Cookie: Currently unsure, noted in word doc but not given explicit reason.
 		// Souvenir: Can eat up a lot of time for some reason from Ubermodule?
+		// Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
 
 		ModSelf.OnActivate += delegate {
 			UpdateScreen("0");
 			started = true;
-			solvables = Info.GetSolvableModuleNames ().Where (a => !ignores.Contains (a)).ToList (); // Section used for debugging starts here.
+			// Section used for debugging starts here.
+			solvables = Info.GetSolvableModuleNames ().Where (a => !ignores.Contains (a)).ToList ();
 				Debug.LogFormat ("[Ubermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules.
 				if (solvables.Count () != 0)
 					Debug.LogFormat ("[Ubermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList (solvables.ToArray ())); // Prints ENTIRE list of modules not ignored.
@@ -178,7 +185,7 @@ public class UbermoduleHandler : MonoBehaviour {
 					Debug.LogFormat ("[Ubermodule #{0}] There are 0 non-ignored modules.", _moduleId);
 			
 			var ignored = Info.GetSolvableModuleNames().Where(a=>ignores.Contains(a)).ToList();
-			Debug.LogFormat ("[Ubermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray()));
+			Debug.LogFormat ("[Ubermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
 			// Section used for debugging ends here.
 
 			stagesToGenerate = UnityEngine.Random.Range (3, 5);
