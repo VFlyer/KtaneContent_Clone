@@ -98,4 +98,10 @@ MonoBehaviour:
       SpecialComponentType: 0
       ModTypes:
       - organizationModule
+    - Count: 1
+      AllowedSources: 2
+      ComponentTypes: 
+      SpecialComponentType: 0
+      ModTypes:
+      - simonsStages
   PacingEventsEnabled: 0
