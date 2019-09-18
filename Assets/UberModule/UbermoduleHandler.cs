@@ -313,6 +313,7 @@ public class UbermoduleHandler : MonoBehaviour {
 							list1.Remove (A);
 						}
 						solvedModules.AddRange (list1);
+						Debug.LogFormat ("[Ubermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
 						Debug.LogFormat ("[Ubermodule #{0}] Non-ignored Modules Currently Solved: {1}", _moduleId, FomatterDebugList (solvedModules));
 					}
 					string value = solvedModules.Count().ToString();
@@ -330,6 +331,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	IEnumerator GetStage(int cstage)
 	{
 		isplayAnim = true;
+		sound.PlayGameSoundAtTransform (KMSoundOverride.SoundEffect.ButtonPress, transform);
 		for(int cnt=0;cnt<animationLength;cnt++)
 		{
 			if (cnt == 0) {
@@ -458,7 +460,9 @@ public class UbermoduleHandler : MonoBehaviour {
 			Debug.LogFormat ("[Ubermodule #{0}] No more stages to go.", _moduleId);
 			StartCoroutine (PlaySolveState());
 		} else {
-			Debug.LogFormat ("[Ubermodule #{0}] Correct character inputted. Moving on to next stage.", _moduleId);
+			if (currentStage > 0) {
+				Debug.LogFormat ("[Ubermodule #{0}] Correct character inputted. Moving on to next stage.", _moduleId);
+			}
 			StartCoroutine (GetStage (currentStage));
 		}
 	}

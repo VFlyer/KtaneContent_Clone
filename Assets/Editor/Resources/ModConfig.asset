@@ -26,4 +26,4 @@ MonoBehaviour:
     Implemented and currently maintained by VFlyer'
   version: 1.0
   outputFolder: build
-  previewImage: {fileID: 2800000, guid: 7cb49f2dbc1cb6a43bfdaea51f19e399, type: 3}
+  previewImage: {fileID: 2800000, guid: 8c957c29b553ddb4c99e6d295c3548eb, type: 3}
