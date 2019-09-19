@@ -431,7 +431,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ModuleType: ubermodule
-  ModuleDisplayName: "\xDCbermodule"
+  ModuleDisplayName: Ubermodule
   RequiresTimerVisibility: 0
 --- !u!114 &114164860398733524
 MonoBehaviour:
