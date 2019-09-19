@@ -156,7 +156,7 @@ public class UbermoduleHandler : MonoBehaviour {
 				"The Time Keeper",
 				"Timing is Everything",
 				"Turn The Key",
-				"Ubermodule",
+				"Übermodule",
 				"Organization",
 				"Forget Them All",
 				"Forget Us Not",
