@@ -164,15 +164,31 @@ public class UbermoduleHandler : MonoBehaviour {
 				"Cruel Purgatory"
 			});
 		}
-		// Ubermodule: Don't hang bombs with duplicates of THIS
+		// Übermodule: Don't hang bombs with duplicates of THIS
 		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive.
 		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
 		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager
 		// Tallordered Keys: See "Forget" Modules
-		// Hogwarts, Divided, Cookie: Currently unsure, noted in word doc but not given explicit reason.
+		// Hogwarts, Divided, Cookie: Currently unsure, something something, bomb hanging...
 		// Souvenir: Can eat up a lot of time for some reason from Ubermodule?
 		// Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
-
+		Info.OnBombExploded += delegate {
+			if (solved) return;
+			Debug.LogFormat ("[Ubermodule #{0}] Upon bomb detonation:", _moduleId);
+			for (int x=currentStage+1;x<stagesNum.Count();x++)
+			{
+				if (stagesNum[x]<0||stagesNum[x]>=solvedModules.Count())
+				{
+					Debug.LogFormat ("[Ubermodule #{0}] Stage {1} would not be accessible.", _moduleId,x+1);
+				}
+				else
+				{
+					Debug.LogFormat ("[Ubermodule #{0}] For stage {2}, the number {1} would be visible.", _moduleId,stagesNum[x]+1,x+1);
+					Debug.LogFormat ("[Ubermodule #{0}] The defuser would have to input \"{1}\" in {2}.", _moduleId,solvedModules[stagesNum[x]].Substring(0,1),InputMethod[x]);
+				}
+			}
+			return;
+		};
 		ModSelf.OnActivate += delegate {
 			UpdateScreen("0");
 			started = true;
@@ -331,7 +347,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	IEnumerator GetStage(int cstage)
 	{
 		isplayAnim = true;
-		sound.PlayGameSoundAtTransform (KMSoundOverride.SoundEffect.ButtonPress, transform);
+		sound.PlayGameSoundAtTransform (KMSoundOverride.SoundEffect.MenuButtonPressed, transform);
 		for(int cnt=0;cnt<animationLength;cnt++)
 		{
 			if (cnt == 0) {
