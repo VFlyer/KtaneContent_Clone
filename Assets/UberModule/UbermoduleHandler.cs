@@ -164,10 +164,11 @@ public class UbermoduleHandler : MonoBehaviour {
 				"Cruel Purgatory"
 			});
 		}
+		Debug.LogFormat ("[Ubermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
 		// Übermodule: Don't hang bombs with duplicates of THIS
 		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive.
 		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
-		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager
+		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager detecting this.
 		// Tallordered Keys: See "Forget" Modules
 		// Hogwarts, Divided, Cookie: Currently unsure, something something, bomb hanging...
 		// Souvenir: Can eat up a lot of time for some reason from Ubermodule?
@@ -184,7 +185,8 @@ public class UbermoduleHandler : MonoBehaviour {
 				else
 				{
 					Debug.LogFormat ("[Ubermodule #{0}] For stage {2}, the number {1} would be visible.", _moduleId,stagesNum[x]+1,x+1);
-					Debug.LogFormat ("[Ubermodule #{0}] The defuser would have to input \"{1}\" in {2}.", _moduleId,solvedModules[stagesNum[x]].Substring(0,1),InputMethod[x]);
+					Debug.LogFormat ("[Ubermodule #{0}] The module that was solved for that stage would be {1}.", _moduleId,solvedModules[stagesNum[x]]);
+					Debug.LogFormat ("[Ubermodule #{0}] The defuser would have to input the correct letter in {1}.", _moduleId,InputMethod[x]);
 				}
 			}
 			return;
@@ -192,9 +194,8 @@ public class UbermoduleHandler : MonoBehaviour {
 		ModSelf.OnActivate += delegate {
 			UpdateScreen("0");
 			started = true;
-			// Section used for debugging starts here.
+			// Section used for debugging ignored modules start here.
 			solvables = Info.GetSolvableModuleNames ().Where (a => !ignores.Contains (a)).ToList ();
-				Debug.LogFormat ("[Ubermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules.
 				if (solvables.Count () != 0)
 					Debug.LogFormat ("[Ubermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList (solvables.ToArray ())); // Prints ENTIRE list of modules not ignored.
 				else
@@ -202,7 +203,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			
 			var ignored = Info.GetSolvableModuleNames().Where(a=>ignores.Contains(a)).ToList();
 			Debug.LogFormat ("[Ubermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
-			// Section used for debugging ends here.
+			// Section used for debugging ignored modules end here.
 
 			stagesToGenerate = UnityEngine.Random.Range (3, 5);
 			stagesNum = new int[stagesToGenerate];
