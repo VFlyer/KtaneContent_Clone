@@ -487,7 +487,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	{
 		while (isHolding) {
 			if (timeHeld > timerdashthres) {
-				UpdateScreen ("─");
+				UpdateScreen ("\uFE58");
 			} else {
 				UpdateScreen ("\u2022");
 			}
