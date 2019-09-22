@@ -180,13 +180,13 @@ public class UbermoduleHandler : MonoBehaviour {
 			{
 				if (stagesNum[x]<0||stagesNum[x]>=solvedModules.Count())
 				{
-					Debug.LogFormat ("[Ubermodule #{0}] Stage {1} would not be accessible.", _moduleId,x+1);
+					Debug.LogFormat ("[Übermodule #{0}] Stage {1} would not be accessible.", _moduleId,x+1);
 				}
 				else
 				{
-					Debug.LogFormat ("[Ubermodule #{0}] For stage {2}, the number {1} would be visible.", _moduleId,stagesNum[x]+1,x+1);
-					Debug.LogFormat ("[Ubermodule #{0}] The module that was solved for that stage would be {1}.", _moduleId,solvedModules[stagesNum[x]]);
-					Debug.LogFormat ("[Ubermodule #{0}] The defuser would have to input the correct letter in {1}.", _moduleId,InputMethod[x]);
+					Debug.LogFormat ("[Übermodule #{0}] For stage {2}, the number {1} would be visible.", _moduleId,stagesNum[x]+1,x+1);
+					Debug.LogFormat ("[Übermodule #{0}] The module that was solved for that stage would be {1}.", _moduleId,solvedModules[stagesNum[x]]);
+					Debug.LogFormat ("[Übermodule #{0}] The defuser would have to input the correct letter in {1}.", _moduleId,InputMethod[x]);
 				}
 			}
 			return;
@@ -232,9 +232,9 @@ public class UbermoduleHandler : MonoBehaviour {
 				InputMethod [x] = RandomState;
 				if (stagesNum [x] >= 0) {
 					if (RandomState.Equals("Morse"))
-						Debug.LogFormat ("[Ubermodule #{0}] Generated manditory stage {1} requiring Morse input.", _moduleId, numbers [x] + 1);
+						Debug.LogFormat ("[Übermodule #{0}] Generated manditory stage {1} requiring Morse input.", _moduleId, numbers [x] + 1);
 					else if (RandomState.Equals("Tap Code"))
-						Debug.LogFormat ("[Ubermodule #{0}] Generated manditory stage {1} requiring Tap Code input.", _moduleId, numbers [x] + 1);
+						Debug.LogFormat ("[Übermodule #{0}] Generated manditory stage {1} requiring Tap Code input.", _moduleId, numbers [x] + 1);
 				}
 			}
 		};
@@ -330,8 +330,8 @@ public class UbermoduleHandler : MonoBehaviour {
 							list1.Remove (A);
 						}
 						solvedModules.AddRange (list1);
-						Debug.LogFormat ("[Ubermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
-						Debug.LogFormat ("[Ubermodule #{0}] Non-ignored Modules Currently Solved: {1}", _moduleId, FomatterDebugList (solvedModules));
+						Debug.LogFormat ("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
+						Debug.LogFormat ("[Übermodule #{0}] Non-ignored Modules Currently Solved: {1}", _moduleId, FomatterDebugList (solvedModules));
 					}
 					string value = solvedModules.Count().ToString();
 					if (!isFinal) {
@@ -353,19 +353,19 @@ public class UbermoduleHandler : MonoBehaviour {
 		{
 			if (cnt == 0) {
 				if (cstage>=0&&stagesNum[cstage]>=0) {
-					Debug.LogFormat ("[Ubermodule #{0}] You need to input stage {1}.", _moduleId, stagesNum[cstage]+1);
+					Debug.LogFormat ("[Übermodule #{0}] You need to input stage {1}.", _moduleId, stagesNum[cstage]+1);
 					if (InputMethod[currentStage].Equals("Morse")) {
-						Debug.LogFormat ("[Ubermodule #{0}] You need to input the correct letter in Morse.", _moduleId);
+						Debug.LogFormat ("[Übermodule #{0}] You need to input the correct letter in Morse.", _moduleId);
 					}
 					else if (InputMethod[currentStage].Equals("Tap Code")) {
-						Debug.LogFormat ("[Ubermodule #{0}] You need to input the correct letter in Tap Code.", _moduleId);
+						Debug.LogFormat ("[Übermodule #{0}] You need to input the correct letter in Tap Code.", _moduleId);
 					}
 					UpdateScreen ((stagesNum[cstage]+1).ToString());
-					Debug.LogFormat("[Ubermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
+					Debug.LogFormat("[Übermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
 					//Debug.LogFormat ("[Ubermodule #{0}] For reference, the module name is {1}", _moduleId,solvedModules[stagesNum[cstage]]);
 				} else {
-					Debug.LogFormat ("[Ubermodule #{0}] The modules has ran out of stages to input.", _moduleId);
-					Debug.LogFormat ("[Ubermodule #{0}] Enforce a solve by clicking on this module 10 times.", _moduleId);
+					Debug.LogFormat ("[Übermodule #{0}] The modules has ran out of stages to input.", _moduleId);
+					Debug.LogFormat ("[Übermodule #{0}] Enforce a solve by clicking on this module 10 times.", _moduleId);
 					UpdateScreen ("?");
 				}
 			}
@@ -395,7 +395,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		{
 			if (isFinal&&cnt == 0&&cstage>=0&&cstage<stagesNum.Count())
 			{
-				Debug.LogFormat("[Ubermodule #{0}] Revealing module name that was solved that advanced the counter to {1}",_moduleId,stagesNum[cstage]+1);
+				Debug.LogFormat("[Übermodule #{0}] Revealing module name that was solved that advanced the counter to {1}",_moduleId,stagesNum[cstage]+1);
 				UpdateScreen (SplitTextSpecial(solvedModules [stagesNum[cstage]]));
 				//Debug.LogFormat("[Ubermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
 			}
@@ -420,7 +420,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	IEnumerator PlayFinaleState()
 	{
 		isplayAnim = true;
-		Debug.LogFormat ("[Ubermodule #{0}] All non-ignored modules have been solved, activating \"finale\" phase.", _moduleId);
+		Debug.LogFormat ("[Übermodule #{0}] All non-ignored modules have been solved, activating \"finale\" phase.", _moduleId);
 		isFinal = true;
 		sound.PlayGameSoundAtTransformWithRef (KMSoundOverride.SoundEffect.LightBuzz, transform);
 		for (int cnt = 0; cnt < 4*animationLength; cnt++) {
@@ -441,7 +441,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		solved = true;
 		ModSelf.HandlePass ();
 		sound.PlayGameSoundAtTransformWithRef (KMSoundOverride.SoundEffect.CorrectChime, transform);
-		Debug.LogFormat("[Ubermodule #{0}] Module solved.",_moduleId);
+		Debug.LogFormat("[Übermodule #{0}] Module solved.",_moduleId);
 		string[] characters = new string[26] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 		int randomstartB = UnityEngine.Random.Range(0,characters.Count());
 		int randomstartA = UnityEngine.Random.Range(0,characters.Count());
@@ -474,11 +474,11 @@ public class UbermoduleHandler : MonoBehaviour {
 	{
 		currentStage++;
 		if (currentStage >= stagesToGenerate) {
-			Debug.LogFormat ("[Ubermodule #{0}] No more stages to go.", _moduleId);
+			Debug.LogFormat ("[Übermodule #{0}] No more stages to go.", _moduleId);
 			StartCoroutine (PlaySolveState());
 		} else {
 			if (currentStage > 0) {
-				Debug.LogFormat ("[Ubermodule #{0}] Correct character inputted. Moving on to next stage.", _moduleId);
+				Debug.LogFormat ("[Übermodule #{0}] Correct character inputted. Moving on to next stage.", _moduleId);
 			}
 			StartCoroutine (GetStage (currentStage));
 		}
@@ -583,7 +583,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			cStageModName = cStageModName.Substring (4);;
 		}
 		var letterRequired = cStageModName.Substring (0, 1);
-		Debug.LogFormat ("[Ubermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId,letterRequired,input);
+		Debug.LogFormat ("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId,letterRequired,input);
 		return input.EqualsIgnoreCase (letterRequired);
 	}
 	IEnumerator CheckMorse()
@@ -609,11 +609,11 @@ public class UbermoduleHandler : MonoBehaviour {
 		} else {
 			UpdateScreen (letterInputted);
 			if (letterInputted.Equals ("?")) {
-				Debug.LogFormat("[Ubermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Morse!",_moduleId);
-				Debug.LogFormat("[Ubermodule #{0}] The recorded input: {1} is not valid for Morse.",_moduleId,morseIn);
+				Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Morse!",_moduleId);
+				Debug.LogFormat("[Übermodule #{0}] The recorded input: {1} is not valid for Morse.",_moduleId,morseIn);
 			}
 			else{
-				Debug.LogFormat("[Ubermodule #{0}] Strike! \"{1}\" was inputted which is not correct!",_moduleId,letterInputted);
+				Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!",_moduleId,letterInputted);
 			}
 			ModSelf.HandleStrike ();
 			StartCoroutine (PlayStrikeAnim (currentStage));
@@ -655,10 +655,10 @@ public class UbermoduleHandler : MonoBehaviour {
 			} else {
 				UpdateScreen (letterInputted);
 				if (letterInputted.Equals ("?")) {
-					Debug.LogFormat("[Ubermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Tap Code!",_moduleId);
-					Debug.LogFormat("[Ubermodule #{0}] The recorded input: {1}, {2} is not a valid for Tap Code.",_moduleId,TapCodeInput1,TapCodeInput2);
+					Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Tap Code!",_moduleId);
+					Debug.LogFormat("[Übermodule #{0}] The recorded input: {1}, {2} is not a valid for Tap Code.",_moduleId,TapCodeInput1,TapCodeInput2);
 				} else {
-					Debug.LogFormat("[Ubermodule #{0}] Strike! \"{1}\" was inputted which is not correct!",_moduleId,letterInputted);
+					Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!",_moduleId,letterInputted);
 				}
 				ModSelf.HandleStrike ();
 				StartCoroutine (PlayStrikeAnim (currentStage));

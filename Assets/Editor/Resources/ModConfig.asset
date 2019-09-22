@@ -16,14 +16,20 @@ MonoBehaviour:
   description: 'Oh no, not another one!
 
 
-    Take notes on what modules were solved that advanced the counter. Use this to
-    input the correct letter of the given stage in either Morse or Tap Code. Designed
-    to be a more welcoming "last" module.
+    Take notes on what modules were solved that advanced the module''s counter. Use
+    this to input the correct letter of the given stage in either Morse or Tap Code.
+    Designed to be a more welcoming "last" module.
 
 
     Original idea by Blananas2
 
-    Implemented and currently maintained by VFlyer'
+    Implemented and currently maintained by VFlyer
+
+
+    Module ID: ubermodule
+
+
+    Source Code: [url=https://github.com/VFlyer/Ubermodule_KTANE]https://github.com/VFlyer/Ubermodule_KTANE[/url]'
   version: 1.0
   outputFolder: build
   previewImage: {fileID: 2800000, guid: 8c957c29b553ddb4c99e6d295c3548eb, type: 3}
