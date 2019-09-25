@@ -96,20 +96,20 @@ public class UbermoduleHandler : MonoBehaviour {
 					{
 						if (stagesNum[currentStage]<0)
 						{
-							Debug.LogFormat("[Ubermodule #{0}] Override detected! The module will now solve itself.",_moduleId);
+							Debug.LogFormat("[Übermodule #{0}] Override detected! The module will now solve itself.",_moduleId);
 							StopCoroutine(currentlyRunning);
 							StartCoroutine(PlaySolveState());
 						}
 						else
 						{
-							Debug.LogFormat("[Ubermodule #{0}] Override detected! However stage is valid to input. Strike!",_moduleId);
+							Debug.LogFormat("[Übermodule #{0}] Override detected! However stage is valid to input. Strike!",_moduleId);
 							StopCoroutine(currentlyRunning);
 							text.color = new Color(text.color.r,text.color.g,text.color.b,(float)1.0);
 							timesHeld.Clear();
 							ModSelf.HandleStrike();
 							StartCoroutine(PlayStrikeAnim(-1));
 							TapCodeInput1 = 0;
-							Debug.LogFormat("[Ubermodule #{0}] Your input has been cleared.",_moduleId);
+							Debug.LogFormat("[Übermodule #{0}] Your input has been cleared.",_moduleId);
 						}
 					}
 					else
@@ -127,7 +127,7 @@ public class UbermoduleHandler : MonoBehaviour {
 					}
 				else
 				{
-					Debug.LogFormat("[Ubermodule #{0}] Strike! You cannot interact with the module until the module is in it's \"finale\" phase.",_moduleId);
+					Debug.LogFormat("[Übermodule #{0}] Strike! You cannot interact with the module until the module is in it's \"finale\" phase.",_moduleId);
 					ModSelf.HandleStrike();
 					StartCoroutine(PlayStrikeAnim(-1));
 					timesHeld.Clear();
@@ -164,7 +164,7 @@ public class UbermoduleHandler : MonoBehaviour {
 				"Cruel Purgatory"
 			});
 		}
-		Debug.LogFormat ("[Ubermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
+		Debug.LogFormat ("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
 		// Übermodule: Don't hang bombs with duplicates of THIS
 		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive.
 		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
@@ -175,7 +175,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		// Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
 		Info.OnBombExploded += delegate {
 			if (solved) return;
-			Debug.LogFormat ("[Ubermodule #{0}] Upon bomb detonation:", _moduleId);
+			Debug.LogFormat ("[Übermodule #{0}] Upon bomb detonation:", _moduleId);
 			for (int x=currentStage+1;x<stagesNum.Count();x++)
 			{
 				if (stagesNum[x]<0||stagesNum[x]>=solvedModules.Count())
@@ -197,12 +197,12 @@ public class UbermoduleHandler : MonoBehaviour {
 			// Section used for debugging ignored modules start here.
 			solvables = Info.GetSolvableModuleNames ().Where (a => !ignores.Contains (a)).ToList ();
 				if (solvables.Count () != 0)
-					Debug.LogFormat ("[Ubermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList (solvables.ToArray ())); // Prints ENTIRE list of modules not ignored.
+				Debug.LogFormat ("[Übermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList (solvables.ToArray ())); // Prints ENTIRE list of modules not ignored.
 				else
-					Debug.LogFormat ("[Ubermodule #{0}] There are 0 non-ignored modules.", _moduleId);
+				Debug.LogFormat ("[Übermodule #{0}] There are 0 non-ignored modules.", _moduleId);
 			
 			var ignored = Info.GetSolvableModuleNames().Where(a=>ignores.Contains(a)).ToList();
-			Debug.LogFormat ("[Ubermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
+			Debug.LogFormat ("[Übermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
 			// Section used for debugging ignored modules end here.
 
 			stagesToGenerate = UnityEngine.Random.Range (3, 5);
