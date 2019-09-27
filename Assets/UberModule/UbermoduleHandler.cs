@@ -2,18 +2,17 @@
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using KModkit;
+//using KModkit;
 using System;
-using System.Text;
+//using System.Text;
 using System.Text.RegularExpressions;
-
 
 public class UbermoduleHandler : MonoBehaviour {
 	public static string[] ignores = null;
 	public GameObject button;
 	public Renderer screen;
 	public TextMesh text;
-	private List<String> solvedModules = new List<string>();
+	private List<string> solvedModules = new List<string>();
 	public KMBombModule ModSelf;
 	public KMBombInfo Info;
 	public KMAudio sound;
@@ -22,7 +21,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	private int _moduleId = 0;
 	private bool isFinal = false;
 	private int stagesToGenerate = 0;
-	private int[] stagesNum;
+	private int[] stagesNum;        // A set of stages to get the xth solved module.
 	private string[] InputMethod;	// String determining the input method necessary. "" will be used if neither matches.
 	private int currentStage = -1;
 	private bool started = false;
@@ -50,8 +49,8 @@ public class UbermoduleHandler : MonoBehaviour {
 		"Just no.",
 		"Yes. This\nis a thing.",
 		"Oh no!\nNot again!",
-		":)",
-		"^_^",
+		"Bright idea!",
+		"...",
 		"Simple,\nright?",
 		"Just yes.",
 		"Yes.",
@@ -84,7 +83,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			return false;
 		};
 		selectable.OnInteractEnded += delegate {
-			if (!solved&&!isplayAnim&&(!stateduringHold))
+			if (!solved&&!isplayAnim&&(!stateduringHold))// Detect if the module is solved, playing an animation, or being held while the animation is playing
 			{
 				isHolding = false;
 				//print (timeHeld);
@@ -575,6 +574,21 @@ public class UbermoduleHandler : MonoBehaviour {
 				return "?";
 		}
 	}
+    string getFirstValidCharacter(string module)
+    {
+        var input = module.ToLower();
+        var output = "";
+        for (var currentindex = 0; currentindex<input.Length&&output.Length==0; currentindex++)
+        {
+            var currentLetter = input.Substring(currentindex, 1);
+            if (currentLetter.RegexMatch(@"\w"))
+            {
+                output = currentLetter;
+                print(currentLetter);
+            }
+        }
+        return output;
+    }
 	bool isCorrect(string input)
 	{
 		cStageModName = solvedModules[stagesNum[currentStage]];
@@ -582,7 +596,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		{
 			cStageModName = cStageModName.Substring (4);;
 		}
-		var letterRequired = cStageModName.Substring (0, 1);
+        var letterRequired = getFirstValidCharacter(cStageModName);
 		Debug.LogFormat ("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId,letterRequired,input);
 		return input.EqualsIgnoreCase (letterRequired);
 	}
