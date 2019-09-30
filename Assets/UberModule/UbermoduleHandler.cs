@@ -160,8 +160,9 @@ public class UbermoduleHandler : MonoBehaviour {
 				"Forget Them All",
 				"Forget Us Not",
 				"The Very Annoying Button",
-				"Cruel Purgatory"
-			});
+				"Cruel Purgatory",
+                "Forget Me Later"
+            });
 		}
 		Debug.LogFormat ("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
 		// Übermodule: Don't hang bombs with duplicates of THIS
@@ -175,6 +176,11 @@ public class UbermoduleHandler : MonoBehaviour {
 		Info.OnBombExploded += delegate {
 			if (solved) return;
 			Debug.LogFormat ("[Übermodule #{0}] Upon bomb detonation:", _moduleId);
+            if (stagesNum.Length <= 0)
+            {
+                Debug.LogFormat("[Übermodule #{0}] Bomb detonated before stages were generated.", _moduleId);
+                return;
+            }
 			for (int x=currentStage+1;x<stagesNum.Count();x++)
 			{
 				if (stagesNum[x]<0||stagesNum[x]>=solvedModules.Count())
@@ -348,7 +354,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	{
 		isplayAnim = true;
 		sound.PlayGameSoundAtTransform (KMSoundOverride.SoundEffect.MenuButtonPressed, transform);
-		for(int cnt=0;cnt<animationLength;cnt++)
+		for(int cnt=0;cnt<animationLength+1;cnt++)
 		{
 			if (cnt == 0) {
 				if (cstage>=0&&stagesNum[cstage]>=0) {
@@ -390,7 +396,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			text.color = new Color(1,0,0,(float)(1.0-(float)cnt/animationLength));
 			yield return new WaitForSeconds(0);
 		}
-		for(int cnt=0;cnt<animationLength;cnt++)
+		for(int cnt=0;cnt<animationLength+1;cnt++)
 		{
 			if (isFinal&&cnt == 0&&cstage>=0&&cstage<stagesNum.Count())
 			{
@@ -576,7 +582,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	}
     string getFirstValidCharacter(string module)
     {
-        var input = module.ToLower();
+        var input = module.ToUpper();
         var output = "";
         for (var currentindex = 0; currentindex<input.Length&&output.Length==0; currentindex++)
         {
@@ -584,7 +590,6 @@ public class UbermoduleHandler : MonoBehaviour {
             if (currentLetter.RegexMatch(@"\w"))
             {
                 output = currentLetter;
-                print(currentLetter);
             }
         }
         return output;
@@ -597,8 +602,12 @@ public class UbermoduleHandler : MonoBehaviour {
 			cStageModName = cStageModName.Substring (4);;
 		}
         var letterRequired = getFirstValidCharacter(cStageModName);
+        if (letterRequired.Length!=0) {
 		Debug.LogFormat ("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId,letterRequired,input);
 		return input.EqualsIgnoreCase (letterRequired);
+        }
+        Debug.LogFormat("[Übermodule #{0}] There is no valid detectable character from this. Skipping check...", _moduleId, letterRequired, input);
+        return true;
 	}
 	IEnumerator CheckMorse()
 	{
