@@ -74,7 +74,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			if (currentlyRunning!=null)
 				StopCoroutine(currentlyRunning);
 			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)1.0);
-			if (InputMethod[currentStage].Equals("Morse"))
+			if ( (currentStage>=0 && currentStage<stagesNum.Count()) && InputMethod[currentStage].Equals("Morse"))
 			{
 				StartCoroutine(ShowMorseInput());
 			}
@@ -140,28 +140,30 @@ public class UbermoduleHandler : MonoBehaviour {
 		if (ignores == null) {
 			ignores = GetComponent<KMBossModule> ().GetIgnoredModules ("Ubermodule", new string[] {
 				"Cookie Jars",
+                "Cruel Purgatory",
 				"Divided Squares",
 				"Forget Enigma",
 				"Forget Everything",
+                "Forget Me Later",
 				"Forget Me Not",
 				"Forget Perspective",
+                "Forget Them All",
 				"Forget This",
+                "Forget Us Not",
 				"Hogwarts",
+				"Organization",
 				"Purgatory",
 				"Simon's Stages",
 				"Souvenir",
-				"Tallordered Keys",
 				"The Swan",
+				"Tallordered Keys",
 				"The Time Keeper",
 				"Timing is Everything",
 				"Turn The Key",
 				"Übermodule",
-				"Organization",
-				"Forget Them All",
-				"Forget Us Not",
-				"The Very Annoying Button",
-				"Cruel Purgatory",
-                "Forget Me Later"
+				"The Very Annoying Button"
+				
+                
             });
 		}
 		Debug.LogFormat ("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
@@ -170,7 +172,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
 		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager detecting this.
 		// Tallordered Keys: See "Forget" Modules
-		// Hogwarts, Divided, Cookie: Currently unsure, something something, bomb hanging...
+		// Hogwarts, Divided, Cookie, Forget Me Later: Something, something, bomb hanging...
 		// Souvenir: Can eat up a lot of time for some reason from Ubermodule?
 		// Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
 		Info.OnBombExploded += delegate {
@@ -280,8 +282,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			}
 		}
 		if (clength > largestLength)
-			largestLength = clength;
-		clength = 0;
+            largestLength = clength;
 
 
 		if (value.Length == 0) {
@@ -294,7 +295,7 @@ public class UbermoduleHandler : MonoBehaviour {
 	string SplitTextSpecial (string input)
 	{
 		var checker = input;
-		//checker = "Boolean Venn Diagram";
+		//checker = "Boolean Venn Diagram"; // Used for Testing, 
 		var largest = 0;
 		var words = checker.Split(new[] {' ','|',',',' '}).ToList();
 		var splits = new List<int>();
@@ -328,26 +329,25 @@ public class UbermoduleHandler : MonoBehaviour {
 				timeHeld++;
 			}
 			if (started) {
-				if (canUpdateCounterNonBoss ()) {
+				if (CanUpdateCounterNonBoss ()) {
 					var list1 = Info.GetSolvedModuleNames ().Where (a => !ignores.Contains (a)).ToList();
 					if (list1.Count () != solvedModules.Count()) {
 						foreach (String A in solvedModules) {
 							list1.Remove (A);
 						}
 						solvedModules.AddRange (list1);
-						Debug.LogFormat ("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
-						Debug.LogFormat ("[Übermodule #{0}] Non-ignored Modules Currently Solved: {1}", _moduleId, FomatterDebugList (solvedModules));
-					}
+                        Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
+                        Debug.LogFormat("[Übermodule #{0}] Non-ignored Modules Currently Solved: {1}", _moduleId, FomatterDebugList(solvedModules));
+                    }
 					string value = solvedModules.Count().ToString();
 					if (!isFinal) {
 						UpdateScreen (value);
 						if (solvedModules.Count () >= solvables.Count ()) {
-							StartCoroutine (PlayFinaleState ());
+                            StartCoroutine(PlayFinaleState());
 						}
-					}
+                    }
 				}
-			}
-
+            }
 		}
 	}
 	IEnumerator GetStage(int cstage)
@@ -375,11 +375,11 @@ public class UbermoduleHandler : MonoBehaviour {
 				}
 			}
 			if (InputMethod [currentStage].Equals ("Morse")) {
-				text.color = new Color (1, 0, 0, (float)((float)cnt / animationLength));
+				text.color = new Color (1, 0, 0, (float)cnt / animationLength);
 			} else if (InputMethod [currentStage].Equals ("Tap Code")) {
-				text.color = new Color (0, 0, 1, (float)((float)cnt / animationLength));
+				text.color = new Color (0, 0, 1, (float)cnt / animationLength);
 			} else {
-				text.color = new Color (1, 1, 1, (float)((float)cnt / animationLength));
+				text.color = new Color (1, 1, 1, (float)cnt / animationLength);
 			}
 
 			yield return new WaitForSeconds(0);
@@ -396,28 +396,28 @@ public class UbermoduleHandler : MonoBehaviour {
 			text.color = new Color(1,0,0,(float)(1.0-(float)cnt/animationLength));
 			yield return new WaitForSeconds(0);
 		}
-		for(int cnt=0;cnt<animationLength+1;cnt++)
+        if (isFinal && cstage >= 0 && cstage < stagesNum.Count())
+        {
+            Debug.LogFormat("[Übermodule #{0}] Revealing module name that was solved that advanced the counter to {1}", _moduleId, stagesNum[cstage] + 1);
+            UpdateScreen(SplitTextSpecial(solvedModules[stagesNum[cstage]]));
+            //Debug.LogFormat("[Ubermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
+        }
+        for (int cnt=0;cnt<animationLength+1;cnt++)
 		{
-			if (isFinal&&cnt == 0&&cstage>=0&&cstage<stagesNum.Count())
-			{
-				Debug.LogFormat("[Übermodule #{0}] Revealing module name that was solved that advanced the counter to {1}",_moduleId,stagesNum[cstage]+1);
-				UpdateScreen (SplitTextSpecial(solvedModules [stagesNum[cstage]]));
-				//Debug.LogFormat("[Ubermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
-			}
+            if (cnt<animationLength)
 			text.transform.Rotate (Vector3.back*6);
 			if (!isFinal) {
-				text.color = new Color (0, 0, 0, (float)((float)cnt / animationLength));
+				text.color = new Color (0, 0, 0, (float)cnt / animationLength);
 			}
 			else
 			{
 				if (InputMethod[currentStage].Equals("Morse")) {
-					text.color = new Color (1, 0, 0, (float)((float)cnt / animationLength));
+					text.color = new Color (1, 0, 0, (float)cnt / animationLength);
 				}
 				else if (InputMethod [currentStage].Equals ("Tap Code")){
-					text.color = new Color (0, 0, 1, (float)((float)cnt / animationLength));
+					text.color = new Color (0, 0, 1, (float)cnt / animationLength);
 				}
 			}
-			
 			yield return new WaitForSeconds(0);
 		}
 		isplayAnim = false;
@@ -453,24 +453,24 @@ public class UbermoduleHandler : MonoBehaviour {
 		for (int cnt = 0; cnt < animationLength; cnt++) {
 			randomstartA++;
 			randomstartB++;
-			text.color = new Color(1,1,1,(float)((float)cnt/animationLength));
-			UpdateScreen (characters[(randomstartA+cnt)%characters.Count()] + characters[(randomstartB+cnt)%characters.Count()]);
+            text.color = new Color(1, 1, 1, (float)cnt / animationLength);
+            UpdateScreen(characters[(randomstartA + cnt) % characters.Count()] + characters[(randomstartB + cnt) % characters.Count()]);
 			yield return new WaitForSeconds(0);
 		}
 		while (randomstartA % 26 != 6||randomstartA<52) {
 			randomstartA++;
 			randomstartB++;
-			UpdateScreen (characters[(randomstartA)%characters.Count()] + characters[(randomstartB)%characters.Count()]);
+            UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
 			yield return new WaitForSeconds(0);
 		}
 		while (randomstartB % 26 != 6||randomstartB<104) {
 			randomstartB++;
-			UpdateScreen (characters[(randomstartA)%characters.Count()] + characters[(randomstartB)%characters.Count()]);
+            UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
 			yield return new WaitForSeconds(0);
 		}
 
 	}
-	bool canUpdateCounterNonBoss()
+    bool CanUpdateCounterNonBoss()
 	{
 		var list1 = Info.GetSolvedModuleNames().Where(a => !ignores.Contains(a));
 		return list1.Count () >= solvedModules.Count ();
@@ -501,7 +501,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		//UpdateScreen ((stagesNum[currentStage]+1).ToString());
 		yield return null;
 	}
-	string GetLetterFromMorse(string input)
+    string GetLetterFromMorse(string input)
 	{
 		switch (input) {
 			case ".":
@@ -580,7 +580,7 @@ public class UbermoduleHandler : MonoBehaviour {
 				return "?";
 		}
 	}
-    string getFirstValidCharacter(string module)
+    string GetFirstValidCharacter(string module)
     {
         var input = module.ToUpper();
         var output = "";
@@ -594,24 +594,26 @@ public class UbermoduleHandler : MonoBehaviour {
         }
         return output;
     }
-	bool isCorrect(string input)
+    bool IsCorrect(string input)
 	{
 		cStageModName = solvedModules[stagesNum[currentStage]];
-		if (Regex.IsMatch(cStageModName,@"^The\s"))// Filter out the word "The " at the start of the module name, if present
-		{
+        if (Regex.IsMatch(cStageModName, @"^The\s"))// Filter out the word "The " at the start of the module name, if present
+        {
 			cStageModName = cStageModName.Substring (4);;
 		}
-        var letterRequired = getFirstValidCharacter(cStageModName);
-        if (letterRequired.Length!=0) {
-		Debug.LogFormat ("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId,letterRequired,input);
-		return input.EqualsIgnoreCase (letterRequired);
+        var letterRequired = GetFirstValidCharacter(cStageModName);
+        if (letterRequired.Length != 0)
+        {
+            Debug.LogFormat("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId, letterRequired, input);
+            return input.EqualsIgnoreCase(letterRequired);
         }
         Debug.LogFormat("[Übermodule #{0}] There is no valid detectable character from this. Skipping check...", _moduleId, letterRequired, input);
         return true;
 	}
 	IEnumerator CheckMorse()
 	{
-		for (int cnt = 0; cnt < animationLength*4; cnt++) {
+        for (int cnt = 0; cnt < animationLength * 4; cnt++)
+        {
 			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/animationLength));
 
 			yield return new WaitForSeconds(0);
@@ -627,7 +629,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		cStageModName = solvedModules[currentStage];
 		var letterInputted = GetLetterFromMorse(morseIn);
 		timesHeld.Clear ();
-		if (isCorrect(letterInputted)) {
+		if (IsCorrect(letterInputted)) {
 			AdvanceStage ();
 		} else {
 			UpdateScreen (letterInputted);
@@ -654,7 +656,8 @@ public class UbermoduleHandler : MonoBehaviour {
 			new[] {"V","W","X","Y","Z","5"},
 			new[] {"6","7","8","9","0","K"}
 		};// Grid for Tap Code, not a lot of use otherwise.
-		for (int cnt = 0; cnt < animationLength*4; cnt++) {
+        for (int cnt = 0; cnt < animationLength * 4; cnt++)
+        {
 			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/animationLength));
 
 			yield return new WaitForSeconds(0);
@@ -673,7 +676,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			if ((TapCodeInput1 >= 1 && TapCodeInput1 <= 6) && (TapCodeInput2 >= 1 && TapCodeInput2 <= 6)) {
 				letterInputted = GridLetters [TapCodeInput1 - 1] [TapCodeInput2 - 1];
 			}
-			if (isCorrect(letterInputted)) {
+			if (IsCorrect(letterInputted)) {
 				AdvanceStage ();
 			} else {
 				UpdateScreen (letterInputted);
