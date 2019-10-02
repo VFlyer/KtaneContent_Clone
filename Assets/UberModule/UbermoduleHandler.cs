@@ -159,7 +159,8 @@ public class UbermoduleHandler : MonoBehaviour {
 				"Tallordered Keys",
 				"The Time Keeper",
 				"Timing is Everything",
-				"Turn The Key",
+                "The Troll",
+                "Turn The Key",
 				"Übermodule",
 				"The Very Annoying Button"
 				
