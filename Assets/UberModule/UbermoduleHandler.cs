@@ -167,13 +167,14 @@ public class UbermoduleHandler : MonoBehaviour {
                 
             });
 		}
-		Debug.LogFormat ("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules. Can be commented out later upon final release
+		Debug.LogFormat ("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList (ignores)); // Prints ENTIRE list of Ignored Modules.
 		// Übermodule: Don't hang bombs with duplicates of THIS
-		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive.
+		// Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive, stalling is NOT FUN.
 		// The Swan, The Very Annoying Button: RT Sensitive, would make sense to ignore?
 		// Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager detecting this.
-		// Tallordered Keys: See "Forget" Modules
-		// Hogwarts, Divided, Cookie, Forget Me Later: Something, something, bomb hanging...
+		// Tallordered Keys: See above "Forget" Modules
+		// Hogwarts, Divided, Cookie, Forget Me Later, The Troll: Something, something, bomb hanging...
+        // Organization: THIS WILL HANG BOMBS IF THIS MODULE'S NAME IS SHOWN.
 		// Souvenir: Can eat up a lot of time for some reason from Ubermodule?
 		// Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
 		Info.OnBombExploded += delegate {
@@ -202,23 +203,26 @@ public class UbermoduleHandler : MonoBehaviour {
 		ModSelf.OnActivate += delegate {
 			UpdateScreen("0");
 			started = true;
-			// Section used for debugging ignored modules start here.
+			// Section used for debugging solvable modules start here.
 			solvables = Info.GetSolvableModuleNames ().Where (a => !ignores.Contains (a)).ToList ();
-				if (solvables.Count () != 0)
-				Debug.LogFormat ("[Übermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList (solvables.ToArray ())); // Prints ENTIRE list of modules not ignored.
-				else
-				Debug.LogFormat ("[Übermodule #{0}] There are 0 non-ignored modules.", _moduleId);
-			
-			var ignored = Info.GetSolvableModuleNames().Where(a=>ignores.Contains(a)).ToList();
-			Debug.LogFormat ("[Übermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId,FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
-			// Section used for debugging ignored modules end here.
+            if (solvables.Count() == 0)
+            {
+                Debug.LogFormat("[Übermodule #{0}] There are 0 non-ignored modules.", _moduleId);
+            }
+            else
+            {
+                Debug.LogFormat("[Übermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList(solvables.ToArray())); // Prints ENTIRE list of modules not ignored.
+            }
+            List<string> ignored = Info.GetSolvableModuleNames().Where(a => ignores.Contains(a)).ToList();
+            Debug.LogFormat("[Übermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId, FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
+            // Section used for debugging solvable modules end here.
 
-			stagesToGenerate = UnityEngine.Random.Range (3, 5);
+            stagesToGenerate = UnityEngine.Random.Range (3, 5);
 			stagesNum = new int[stagesToGenerate];
 			InputMethod = new string[stagesToGenerate];
 
-			var numbers = new int[solvables.Count ()];
-			for (int p = 0; p < solvables.Count (); p++) {
+			var numbers = new int[solvables.Count ()]; // Bag Randomizer starts here
+            for (int p = 0; p < solvables.Count (); p++) {
 				numbers [p] = p;
 			}
 			for (int p = 0; p < solvables.Count (); p++) {
@@ -227,7 +231,7 @@ public class UbermoduleHandler : MonoBehaviour {
 				temp = numbers[p];
 				numbers [p] = numbers [toreplace];
 				numbers [toreplace] = temp;
-			}
+			}// Bag Randomizer ends here
 			for (int x = 0; x < stagesToGenerate; x++) {
 				var pickState = new string[] { "Tap Code","Morse" };
 				var RandomState = "";
@@ -368,7 +372,6 @@ public class UbermoduleHandler : MonoBehaviour {
 					}
 					UpdateScreen ((stagesNum[cstage]+1).ToString());
 					Debug.LogFormat("[Übermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
-					//Debug.LogFormat ("[Ubermodule #{0}] For reference, the module name is {1}", _moduleId,solvedModules[stagesNum[cstage]]);
 				} else {
 					Debug.LogFormat ("[Übermodule #{0}] The modules has ran out of stages to input.", _moduleId);
 					Debug.LogFormat ("[Übermodule #{0}] Enforce a solve by clicking on this module 10 times.", _moduleId);
@@ -401,7 +404,6 @@ public class UbermoduleHandler : MonoBehaviour {
         {
             Debug.LogFormat("[Übermodule #{0}] Revealing module name that was solved that advanced the counter to {1}", _moduleId, stagesNum[cstage] + 1);
             UpdateScreen(SplitTextSpecial(solvedModules[stagesNum[cstage]]));
-            //Debug.LogFormat("[Ubermodule #{0}] The solved module for that stage was: {1}",_moduleId,solvedModules [stagesNum[cstage]]);
         }
         for (int cnt=0;cnt<animationLength+1;cnt++)
 		{
@@ -451,11 +453,11 @@ public class UbermoduleHandler : MonoBehaviour {
 		string[] characters = new string[26] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 		int randomstartB = UnityEngine.Random.Range(0,characters.Count());
 		int randomstartA = UnityEngine.Random.Range(0,characters.Count());
-		for (int cnt = 0; cnt < animationLength; cnt++) {
+		for (int cnt = 0; cnt < animationLength+1; cnt++) {
 			randomstartA++;
 			randomstartB++;
             text.color = new Color(1, 1, 1, (float)cnt / animationLength);
-            UpdateScreen(characters[(randomstartA + cnt) % characters.Count()] + characters[(randomstartB + cnt) % characters.Count()]);
+            UpdateScreen(characters[(randomstartA) % characters.Count()] + characters[(randomstartB) % characters.Count()]);
 			yield return new WaitForSeconds(0);
 		}
 		while (randomstartA % 26 != 6||randomstartA<52) {
@@ -588,7 +590,7 @@ public class UbermoduleHandler : MonoBehaviour {
         for (var currentindex = 0; currentindex<input.Length&&output.Length==0; currentindex++)
         {
             var currentLetter = input.Substring(currentindex, 1);
-            if (currentLetter.RegexMatch(@"\w"))
+            if (currentLetter.RegexMatch(@"[A-Z]|[a-z]|[0-9]"))
             {
                 output = currentLetter;
             }

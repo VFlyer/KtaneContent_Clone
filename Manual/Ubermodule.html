@@ -14,25 +14,32 @@
             table {
                 margin: 1em auto;
             }
-
-            /* Example CSS; Remove what is not used.*/
-            .bold {
-                font-weight: bold;
+		.footnote {
+            font-style: italic;
+            font-size: 12px;
+            margin-left: 10 cm;
+			}
+			div.footnote {
+                font-size: 75%;
+                margin-left: 10%;
+                margin-top: 2.5em;
+                position: relative;
             }
-            .underline {
-                text-decoration: underline;
-            }
-            .italics {
-                font-style: italic;
-            }
-
-            img.center {
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
-            }
-            img.example-image {
-                width: 60%;
+                div.footnote::before {
+                    content: '*';
+                    position: absolute;
+                    left: -1em;
+                }
+                div.footnote::after {
+                    content: '';
+                    position: absolute;
+                    border-top: 1px solid #aaa;
+                    left: -1em;
+                    top: -1em;
+                    width: 15em;
+                }
+            div.footnote p {
+                margin: 0;
             }
         </style>
     </head>
@@ -50,9 +57,9 @@
                         <p class="flavour-text">Oh no, not another one!</p>
                         
                         <p>The Übermodule starts with a white background, with a black number in the center. This number will increase every time a module is solved. When all non-ignored modules are solved, the background will turn black, indicating that Übermodule is ready for input. There will be 3 to 5 stages**, complete all stages to solve the module.</p>
-						<p>When Übermodule is ready for input, it will show a number colored either red or blue. The number represents which module you must use for input, where 1 being 1st module solved, 2 being 2nd module solved, etc. In other words, use the name of the module for the number displayed after you solved that module. The color represents how you input, red being Morse Code and blue being Tap Code. Input the 1st English character in that module’s name using that input method to pass the stage, ignoring the word ‘The’. Each stage shows a different number with a color which may be different. Upon inputting the incorrect or invalid letter, the module will strike and the module name will be shown.</p>
+						<p>When Übermodule is ready for input, it will show a number colored either red or blue. The number represents which module you must use for input, where 1 being 1st module solved, 2 being 2nd module solved, etc. In other words, use the name of the module for the number displayed after you solved that module. The color represents how you input, red being Morse Code and blue being Tap Code. Input the 1st English character* in that module’s name using that input method to pass the stage, ignoring the word ‘The’. Each stage shows a different number with a color which may be different. Upon inputting the incorrect or invalid letter, the module will strike and the module name will be shown.</p>
 						<p>Default Ignored Modules: (This may be altered.)</p>
-						<ol style="column-count: 2;">
+						<ol style="column-count: 2">
 							<li>Cookie Jars</li>
 							<li>Divided Squares</li>
 							<li>Forget Enigma</li>
@@ -78,12 +85,16 @@
 							<li>Übermodule</li>
 						</ol>
                     </div>
+					<div class="footnote">
+						<p>English Characters are A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z, and all numerical digits.
+						</p>
+					</div>
                    <div class="page-footer relative-footer">Page 1 of 3</div>
                 </div>
                 <div class="page page-bg-02">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Module Name</span>
+                        <span class="page-header-section-title">Übermodule</span>
                     </div>
                     <div class="page-content">
 						<h2>Input Methods:</h2>
@@ -96,7 +107,7 @@
                 <div class="page page-bg-03">
                     <div class="page-header">
                         <span class="page-header-doc-title">Keep Talking and Nobody Explodes Mod</span>
-                        <span class="page-header-section-title">Module Name</span>
+                        <span class="page-header-section-title">Übermodule</span>
                     </div>
                     <div class="page-content">
 						<h3>Tap Code</h3>
