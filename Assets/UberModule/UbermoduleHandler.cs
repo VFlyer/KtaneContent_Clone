@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -696,4 +696,132 @@ public class UbermoduleHandler : MonoBehaviour {
 		}
 		yield return null;
 	}
+	
+	//Twitch Plays
+	#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam.";
+    #pragma warning restore 414
+
+    IEnumerator ProcessTwitchCommand(string command)
+    {
+		int inputMode = 0;
+		command = command.ToLowerInvariant();
+		command = command.TrimStart();
+		command = command.TrimEnd();
+		
+		if(command.Equals("spam")){
+			inputMode = 3;
+		}
+		else if(command.StartsWith("tap ")) {
+			command = command.Substring(4);
+			inputMode = 1;
+		}
+        else if(command.StartsWith("press ")) {
+			command = command.Substring(6);
+			inputMode = 1;
+		}
+        else if(command.StartsWith("tx ")) {
+			command = command.Substring(3);
+			inputMode = 2;
+		}
+		else if(command.StartsWith("transmit ")) {
+			command = command.Substring(9);
+			inputMode = 2;
+		}
+		else {
+            yield return "sendtochaterror Valid commands are tap, press, tx, transmit, and spam.";
+            yield break;
+        }
+		
+		command = command.Trim();
+		int[] input = new int[command.Length];
+		
+		/* Parsing and validate the input string. */
+		
+		int outnumber;
+		switch(inputMode){
+			case 1:
+			if (command.Length == 2){
+				for (int i = 0; i < command.Length; i++){
+					if(int.TryParse(command, out outnumber) && command[i] != '0') input[i] = command[i] - '0';
+					else {
+						yield return "sendtochaterror Invalid commands: Tap code valid characters are numbers from 1 to 9.";
+						yield break;
+					}
+				}
+			}
+			else{
+				yield return "sendtochaterror Invalid commands: Expect a PAIR of numbers for Tap code.";
+				yield break;
+			}				
+			break;
+			case 2:
+			for (int i = 0; i < command.Length; i++){
+				switch(command[i]){
+					case '.':
+					input[i] = 0;
+					break;
+					case '-':
+					input[i] = 1;
+					break;
+					default :
+					yield return "sendtochaterror Invalid commands: Acceptable inputs for Morse code are '.', '-'.";
+					yield break;
+				}
+			}
+			break;
+		}
+		
+		yield return null;
+		
+		switch(inputMode){
+			case 1:
+			foreach(int k in input){
+				for(int i = 0; i < k; i++){
+					yield return selectable;
+					yield return new WaitForSeconds(0.05f);
+					yield return selectable;
+					yield return new WaitForSeconds(0.05f);
+				}
+				yield return new WaitForSeconds(3.1f);
+			}
+			break;
+			case 2:
+			foreach(int k in input){
+				switch(k){
+					case 0:
+					yield return selectable;
+					yield return new WaitForSeconds(0.05f);
+					yield return selectable;
+					yield return new WaitForSeconds(0.05f);
+					break;
+					case 1:
+					yield return selectable;
+					yield return new WaitForSeconds(1f);
+					yield return selectable;
+					yield return new WaitForSeconds(0.05f);					
+					break;
+				}
+			}
+			yield return new WaitForSeconds(3.1f);
+			break;
+			case 3:
+			for (int i = 0; i < 10; i++){
+				yield return selectable;
+				yield return new WaitForSeconds(0.05f);
+				yield return selectable;
+				yield return new WaitForSeconds(0.05f);
+			}
+			yield return new WaitForSeconds(3.1f);
+			break;
+		}
+		yield break;
+	}
+	
+	IEnumerator TwitchHandleForcedSolve()
+    {
+        yield return null;
+		UpdateScreen("It was auto-solved! :'(");
+		solved = true;
+    }
 }
