@@ -696,7 +696,13 @@ public class UbermoduleHandler : MonoBehaviour {
 		}
 		yield return null;
 	}
-	
+    //KM Mod Settings
+    public class UberModuleModSettings
+    {
+        public int timerdashthreshold;
+        public bool countIgnoredModules;
+    }
+
 	//Twitch Plays
 	#pragma warning disable 414
     private readonly string TwitchHelpMessage = @"To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam.";
