@@ -135,10 +135,10 @@ public class UbermoduleHandler : MonoBehaviour {
 
 			return;
 		};
-		Debug.LogFormat("[Ubermodule #{0}] Entering Startup Phase...",_moduleId);
+		Debug.LogFormat("[Übermodule #{0}] Entering Startup Phase...", _moduleId);
 		UpdateScreen (startupStrings [UnityEngine.Random.Range (0, startupStrings.Length)]);
 		if (ignores == null) {
-			ignores = GetComponent<KMBossModule> ().GetIgnoredModules ("Ubermodule", new string[] {
+			ignores = GetComponent<KMBossModule> ().GetIgnoredModules ("Übermodule", new string[] {
 				"Cookie Jars",
                 "Cruel Purgatory",
 				"Divided Squares",
