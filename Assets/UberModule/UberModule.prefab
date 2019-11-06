@@ -397,7 +397,7 @@ MonoBehaviour:
   m_Script: {fileID: -289456416, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Settings: '{"timerdashthreshold": 30, "countIgnoredModules": false}'
+  Settings: 
   SettingsPath: 
 --- !u!114 &114123398361289140
 MonoBehaviour:
@@ -546,6 +546,7 @@ MonoBehaviour:
   Info: {fileID: 114164860398733524}
   sound: {fileID: 114667686717134844}
   selectable: {fileID: 114610866996468104}
+  options: {fileID: 114047251702289432}
   materials:
   - {fileID: 2100000, guid: 11203c0d74003f24bb3edee26a773b20, type: 2}
   - {fileID: 2100000, guid: 47203f72999eff64fa65b95a4ca69f9b, type: 2}
