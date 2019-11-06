@@ -520,6 +520,7 @@ public class UbermoduleHandler : MonoBehaviour {
         AdvanceStage();
         isplayAnim = false;
     }
+    IEnumerator PlaySolveState()
     {
         solved = true;
         ModSelf.HandlePass();
