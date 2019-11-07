@@ -594,17 +594,17 @@ public class UbermoduleHandler : MonoBehaviour {
             if (oneinput.Equals("-"))
             {
                 screen.material = materials[0];
-                yield return new WaitForSeconds(0.6f);
+                yield return new WaitForSeconds(0.75f);
                 screen.material = materials[1];
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(0.25f);
             }
             else
             if (oneinput.Equals("."))
             {
                 screen.material = materials[0];
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(0.25f);
                 screen.material = materials[1];
-                yield return new WaitForSeconds(0.2f);
+                yield return new WaitForSeconds(0.25f);
             }
             index++;
         }
