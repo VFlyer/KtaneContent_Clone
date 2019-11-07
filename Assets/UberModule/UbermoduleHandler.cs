@@ -847,66 +847,89 @@ public class UbermoduleHandler : MonoBehaviour {
             }
       };
     //Twitch Plays
-#pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam.";
+	#pragma warning disable 414
+    private readonly string TwitchHelpMessage = @"To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam. If there is already 1 input in Tap code, use !{0} tap 5 to enter the second input (must exactly be a single number) or !{0} reset to reset the input. However, reset command will NOT work if Morse Code was entered when the module was expecting Tap Code";
     #pragma warning restore 414
-
+	
+	private bool morseCodeOnTapCode = false;
     IEnumerator ProcessTwitchCommand(string command)
     {
 		int inputMode = 0;
+		bool isSecond = false;
 		command = command.ToLowerInvariant();
 		command = command.TrimStart();
 		command = command.TrimEnd();
 		
-		if(command.Equals("spam")){
+		if(TapCodeInput1 == 0) morseCodeOnTapCode = false; //Ensure that the reset command would work the second time after morse code type input is entered into tap code.
+		if(command.Equals("reset"))
+		{
+			if(!morseCodeOnTapCode) TapCodeInput1 = 0; //Reset Tap code input in a case where the command is unexpectedly halted, or there is a direct interaction to the module outside TP.
+			else yield return "sendtochaterror Can't reset the module due to Morse Code was used to enter the first input of Tap Code.";
+		}
+		else if(command.Equals("spam"))
+		{
 			inputMode = 3;
 		}
-		else if(command.StartsWith("tap ")) {
+		else if(command.StartsWith("tap ")) 
+		{
 			command = command.Substring(4);
 			inputMode = 1;
 		}
-        else if(command.StartsWith("press ")) {
+        else if(command.StartsWith("press ")) 
+		{
 			command = command.Substring(6);
 			inputMode = 1;
 		}
-        else if(command.StartsWith("tx ")) {
+        else if(command.StartsWith("tx ")) 
+		{
 			command = command.Substring(3);
 			inputMode = 2;
 		}
-		else if(command.StartsWith("transmit ")) {
+		else if(command.StartsWith("transmit ")) 
+		{
 			command = command.Substring(9);
 			inputMode = 2;
 		}
-		else {
-            yield return "sendtochaterror Valid commands are tap, press, tx, transmit, and spam.";
+		else 
+		{
+            yield return "sendtochaterror Valid commands are tap, press, tx, transmit, spam, and reset.";
             yield break;
         }
-		
+		if (inputMode >= 1 && inputMode <= 3 && !isFinal) inputMode = 4;
 		command = command.Trim();
 		int[] input = new int[command.Length];
 		
 		/* Parsing and validate the input string. */
 		
 		int outnumber;
-		switch(inputMode){
+		switch(inputMode)
+		{
 			case 1:
-			if (command.Length == 2){
-				for (int i = 0; i < command.Length; i++){
+			/* If no input has been entered, then expects two taps. If a single input have been entered, then expects one tap.*/
+			if ((TapCodeInput1 == 0 && command.Length == 2)||(TapCodeInput1 != 0 && command.Length == 1))
+			{
+				for (int i = 0; i < command.Length; i++)
+				{
 					if(int.TryParse(command, out outnumber) && command[i] != '0') input[i] = command[i] - '0';
-					else {
+					else 
+					{
 						yield return "sendtochaterror Invalid commands: Tap code valid characters are numbers from 1 to 9.";
 						yield break;
 					}
 				}
 			}
-			else{
-				yield return "sendtochaterror Invalid commands: Expect a PAIR of numbers for Tap code.";
+			else
+			{
+				if(TapCodeInput1 == 0) yield return "sendtochaterror Invalid commands: Expect a PAIR of numbers for Tap code.";
+				else yield return "sendtochaterror Invalid commands: Expect a SINGLE number for Tap code.";
 				yield break;
 			}				
 			break;
 			case 2:
-			for (int i = 0; i < command.Length; i++){
-				switch(command[i]){
+			for (int i = 0; i < command.Length; i++)
+			{
+				switch(command[i])
+				{
 					case '.':
 					input[i] = 0;
 					break;
@@ -925,19 +948,37 @@ public class UbermoduleHandler : MonoBehaviour {
 		
 		switch(inputMode){
 			case 1:
-			foreach(int k in input){
-				for(int i = 0; i < k; i++){
+			foreach(int k in input)
+			{
+				for(int i = 0; i < k; i++)
+				{
 					yield return selectable;
 					yield return new WaitForSeconds(0.05f);
 					yield return selectable;
 					yield return new WaitForSeconds(0.05f);
 				}
-				yield return new WaitForSeconds(3.1f);
+				/* Check if the expected inputs must be in Tap Code, whether it is the first input set, and ensure that there is no more than 9 taps.*/
+				if (!isSecond && InputMethod[currentStage].Equals("Tap Code") && k <= 9)
+				{
+					yield return new WaitUntil(() => TapCodeInput1 != 0);
+					isSecond = true;
+					yield return "trycancel The Tap code submission has been canceled. The first input is " + TapCodeInput1.ToString() + ".";
+				}
 			}
+			yield return "solve";
+			yield return "strike";
 			break;
 			case 2:
-			foreach(int k in input){
-				switch(k){
+			foreach(int k in input)
+			{
+				int j = k;
+				if (InputMethod[currentStage].Equals("Tap Code"))
+				{
+					j = 0; //Convert all dashes to a single tap since the selectable cannot be hold in Tap Code mode.
+					morseCodeOnTapCode = true; //Prevent player from resetting the input when wrong type of answer is entered.
+				}
+				switch(j)
+				{
 					case 0:
 					yield return selectable;
 					yield return new WaitForSeconds(0.05f);
@@ -946,22 +987,33 @@ public class UbermoduleHandler : MonoBehaviour {
 					break;
 					case 1:
 					yield return selectable;
-					yield return new WaitForSeconds(1f);
+					yield return new WaitUntil(() => timeHeld > timerdashthres);
 					yield return selectable;
-					yield return new WaitForSeconds(0.05f);					
+					yield return new WaitForSeconds(0.1f);					
 					break;
 				}
 			}
-			yield return new WaitForSeconds(3.1f);
+			yield return "solve";
+			yield return "strike";
 			break;
 			case 3:
-			for (int i = 0; i < 10; i++){
+			for (int i = 0; i < 10; i++)
+			{
 				yield return selectable;
 				yield return new WaitForSeconds(0.05f);
 				yield return selectable;
 				yield return new WaitForSeconds(0.05f);
 			}
-			yield return new WaitForSeconds(3.1f);
+			yield return "solve";
+			yield return "strike";
+			break;
+			case 4:
+			/* When the module is not ready to solve. */
+			yield return selectable;
+			yield return new WaitForSeconds(0.05f);
+			yield return selectable;
+			yield return new WaitForSeconds(0.05f);
+			yield return "strike";
 			break;
 		}
 		yield break;
