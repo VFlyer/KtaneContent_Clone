@@ -615,13 +615,13 @@ public class UbermoduleHandler : MonoBehaviour {
         for (int x=0;x<input1;x++)
         {
             sound.PlaySoundAtTransform("Tap", transform);
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.5f);
         }
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(0.5f);
         for (int x = 0; x < input2; x++)
         {
             sound.PlaySoundAtTransform("Tap", transform);
-            yield return new WaitForSeconds(0.2f);
+            yield return new WaitForSeconds(0.5f);
         }
         yield return null;
     }
