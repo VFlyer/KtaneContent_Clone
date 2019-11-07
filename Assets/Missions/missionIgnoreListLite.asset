@@ -12,11 +12,8 @@ MonoBehaviour:
   m_Name: missionIgnoreListLite
   m_EditorClassIdentifier: 
   DisplayName: Does It Ignore Others?
-  Description: 'This test is meant to see if Ubermodule can ignore certain "last"
-    modules.
-
-
-'
+  Description: "This test is meant to see if \xDCbermodule can ignore certain \"last\"
+    modules.\n\n"
   GeneratorSetting:
     TimeLimit: 7200
     NumStrikes: 90
@@ -30,7 +27,7 @@ MonoBehaviour:
       SpecialComponentType: 0
       ModTypes:
       - ubermodule
-    - Count: 3
+    - Count: 2
       AllowedSources: 1
       ComponentTypes: 
       SpecialComponentType: 0
@@ -43,14 +40,6 @@ MonoBehaviour:
       - MemoryV2
       - HexiEvilFMN
       - forgetEnigma
-    - Count: 3
-      AllowedSources: 1
-      ComponentTypes: 
-      SpecialComponentType: 0
-      ModTypes:
-      - cookieJars
-      - HogwartsModule
-      - DividedSquaresModule
     - Count: 1
       AllowedSources: 1
       ComponentTypes: 
@@ -62,20 +51,15 @@ MonoBehaviour:
       ComponentTypes: 
       SpecialComponentType: 0
       ModTypes:
+      - timeKeeper
       - TurnTheKey
     - Count: 1
       AllowedSources: 1
       ComponentTypes: 
       SpecialComponentType: 0
       ModTypes:
-      - timeKeeper
-    - Count: 1
-      AllowedSources: 1
-      ComponentTypes: 
-      SpecialComponentType: 0
-      ModTypes:
       - organizationModule
-    - Count: 5
+    - Count: 9
       AllowedSources: 3
       ComponentTypes: 
       SpecialComponentType: 1

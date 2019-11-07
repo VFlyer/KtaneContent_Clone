@@ -12,7 +12,8 @@ MonoBehaviour:
   m_Name: missionStrictIgnoreList
   m_EditorClassIdentifier: 
   DisplayName: Does It Strictly Ignore Others?
-  Description: This test strictly focuses on if Ubermodule can ignore "last" modules.
+  Description: "This test strictly focuses on if \xDCbermodule can ignore \"last\"
+    modules."
   GeneratorSetting:
     TimeLimit: 30
     NumStrikes: 255
@@ -26,18 +27,6 @@ MonoBehaviour:
       SpecialComponentType: 0
       ModTypes:
       - ubermodule
-    - Count: 1
-      AllowedSources: 2
-      ComponentTypes: 
-      SpecialComponentType: 0
-      ModTypes:
-      - DividedSquaresModule
-    - Count: 1
-      AllowedSources: 2
-      ComponentTypes: 
-      SpecialComponentType: 0
-      ModTypes:
-      - cookieJars
     - Count: 1
       AllowedSources: 2
       ComponentTypes: 

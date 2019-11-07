@@ -95,6 +95,7 @@ GameObject:
   - component: {fileID: 114123398361289140}
   - component: {fileID: 114527881217568082}
   - component: {fileID: 114823378098100846}
+  - component: {fileID: 114047251702289432}
   m_Layer: 0
   m_Name: UberModule
   m_TagString: Untagged
@@ -385,6 +386,19 @@ TextMesh:
   m_Color:
     serializedVersion: 2
     rgba: 4278190080
+--- !u!114 &114047251702289432
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 100100000}
+  m_GameObject: {fileID: 1462028120743156}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -289456416, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  Settings: 
+  SettingsPath: 
 --- !u!114 &114123398361289140
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -465,7 +479,7 @@ MonoBehaviour:
   SelectableColliders: []
   DefaultSelectableIndex: 0
   AllowSelectionWrapX: 0
-  AllowSelectionWrapY: 0
+  AllowSelectionWrapY: 1
   ForceSelectionHighlight: 0
   ForceInteractionHighlight: 0
 --- !u!114 &114610866996468104
@@ -532,6 +546,7 @@ MonoBehaviour:
   Info: {fileID: 114164860398733524}
   sound: {fileID: 114667686717134844}
   selectable: {fileID: 114610866996468104}
+  options: {fileID: 114047251702289432}
   materials:
   - {fileID: 2100000, guid: 11203c0d74003f24bb3edee26a773b20, type: 2}
   - {fileID: 2100000, guid: 47203f72999eff64fa65b95a4ca69f9b, type: 2}
