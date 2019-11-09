@@ -158,6 +158,7 @@ public class UbermoduleHandler : MonoBehaviour {
         UpdateScreen(startupStrings[UnityEngine.Random.Range(0, startupStrings.Length)]);
         if (ignores == null) {
             ignores = GetComponent<KMBossModule>().GetIgnoredModules("Übermodule", new string[] {
+                "Bamboozling Time Keeper",
                 "Cruel Purgatory",
                 "Forget Enigma",
                 "Forget Everything",
@@ -174,6 +175,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 "Tallordered Keys",
                 "The Time Keeper",
                 "Timing is Everything",
+                "The Troll",
                 "Turn The Key",
                 "Übermodule",
                 "The Very Annoying Button"
@@ -188,6 +190,7 @@ public class UbermoduleHandler : MonoBehaviour {
         // Organization: THIS WILL HANG BOMBS IF THIS MODULE'S NAME IS SHOWN.
         // Souvenir: Can eat up a lot of time for some reason from Übermodule?
         // Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
+        // The Troll: Worst case senario involves The troll and THIS module involving something along the lines of "The Troll still does not ignore boss modules."
         Info.OnBombExploded += delegate {
             if (solved) return;
             Debug.LogFormat("[Übermodule #{0}] Upon bomb detonation:", _moduleId);
@@ -1019,7 +1022,7 @@ public class UbermoduleHandler : MonoBehaviour {
 		yield break;
 	}
 
-    private readonly string[] forceSolveTexts = new string[] { "It was\nauto-solved!\n:'(", "Halting...", "Auto-solved." };
+    private readonly string[] forceSolveTexts = new string[] { "It was\nauto-solved!\n:'(", "Halting...", "Auto-solved.", "Auto-solved.\n:(" };
 	IEnumerator TwitchHandleForcedSolve()
     {
         yield return null;
