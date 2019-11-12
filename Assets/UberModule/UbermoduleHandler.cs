@@ -387,6 +387,11 @@ public class UbermoduleHandler : MonoBehaviour {
                             {
                                 list1.Remove(A);
                             }
+                            if (list1.Count > 1)
+                            {
+                                list1.Sort();
+                                Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
+                            }
                             allSolved.AddRange(list1);
                             Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
                             Debug.LogFormat("[Übermodule #{0}] Module(s) Recently Solved: {1}", _moduleId, FomatterDebugList(list1));
@@ -409,10 +414,10 @@ public class UbermoduleHandler : MonoBehaviour {
                             {
                                 list2.Remove(A);
                             }
-                            if (unignoredSolved.Count > 1)
+                            if (list2.Count > 1)
                             { 
-                                unignoredSolved.Sort();
-
+                                list2.Sort();
+                                Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
                             }
                                 
                             unignoredSolved.AddRange(list2);
