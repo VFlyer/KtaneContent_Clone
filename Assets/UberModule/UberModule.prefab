@@ -397,7 +397,7 @@ MonoBehaviour:
   m_Script: {fileID: -289456416, guid: 45b809be76fd7a3468b6f517bced6f28, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Settings: 
+  Settings: '{timerdashthreshold = 30;countIgnoredModules = false}'
   SettingsPath: 
 --- !u!114 &114123398361289140
 MonoBehaviour:
