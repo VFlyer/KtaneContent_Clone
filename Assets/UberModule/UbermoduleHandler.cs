@@ -409,19 +409,17 @@ public class UbermoduleHandler : MonoBehaviour {
                             {
                                 list2.Remove(A);
                             }
+                            if (unignoredSolved.Count > 1)
+                            { 
+                                unignoredSolved.Sort();
+
+                            }
+                                
                             unignoredSolved.AddRange(list2);
+                            Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
+                            Debug.LogFormat("[Übermodule #{0}] Unignored Recently Solved: {1}", _moduleId, FomatterDebugList(list2));
 
                         }
-                    }
-                    if (list1.Count() != allSolved.Count())
-                    {
-                        foreach (String A in allSolved)
-                        {
-                            list1.Remove(A);
-                        }
-                        unignoredSolved.AddRange(list1);
-                        Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
-                        Debug.LogFormat("[Übermodule #{0}] Unignored Recently Solved: {1}", _moduleId, FomatterDebugList(list1));
                     }
                     string value = unignoredSolved.Count().ToString();
                     UpdateScreen(value);
