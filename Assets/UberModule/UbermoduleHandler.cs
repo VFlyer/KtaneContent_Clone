@@ -398,10 +398,6 @@ public class UbermoduleHandler : MonoBehaviour {
                         }
                     }
                     UpdateScreen(allSolved.Count().ToString());
-                    if (unignoredSolved.Count() >= solvables.Count())
-                    {
-                        StartCoroutine(PlayFinaleState());
-                    }
                 }
                 else
                 {
@@ -426,12 +422,11 @@ public class UbermoduleHandler : MonoBehaviour {
 
                         }
                     }
-                    string value = unignoredSolved.Count().ToString();
-                    UpdateScreen(value);
-                    if (unignoredSolved.Count() >= solvables.Count())
-                    {
-                        StartCoroutine(PlayFinaleState());
-                    }
+                    UpdateScreen(unignoredSolved.Count().ToString());
+                }
+                if (unignoredSolved.Count() >= solvables.Count())
+                {
+                    StartCoroutine(PlayFinaleState());
                 }
             }
         }
@@ -1030,6 +1025,7 @@ public class UbermoduleHandler : MonoBehaviour {
     {
         yield return null;
 		UpdateScreen(forceSolveTexts[UnityEngine.Random.Range(0,forceSolveTexts.Count())]);
-		solved = true;
+        Debug.LogFormat("[Übermodule #{0}] Module forced-solved viva TP solve command.", _moduleId);
+        solved = true;
     }
 }
