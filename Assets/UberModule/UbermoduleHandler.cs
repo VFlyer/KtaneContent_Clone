@@ -72,20 +72,28 @@ public class UbermoduleHandler : MonoBehaviour {
     // Use this for initialization
     void Awake()
     {
-        ModConfig<UberModuleModSettings> modConfig = new ModConfig<UberModuleModSettings>("UbermoduleSettings");
-        // Read from settings file, or create one if one doesn't exist
-        settings = modConfig.Settings;
-        // Update settings file incase of error during read
-        modConfig.Settings = settings;
-        options.RefreshSettings();
+        _moduleId = _moduleIdCounter++;
+        try
+        {
+            ModConfig<UberModuleModSettings> modConfig = new ModConfig<UberModuleModSettings>("UbermoduleSettings");
+            // Read from settings file, or create one if one doesn't exist
+            settings = modConfig.Settings;
+            // Update settings file incase of error during read
+            modConfig.Settings = settings;
+            options.RefreshSettings();
 
-        timerdashthres = modConfig.Settings.timerdashthreshold;
-        countIgnored = modConfig.Settings.countIgnoredModules;
-
+            timerdashthres = modConfig.Settings.timerdashthreshold;
+            countIgnored = modConfig.Settings.countIgnoredModules;
+        }
+        catch
+        {
+            Debug.LogErrorFormat("[Übermodule #{0}]: The settings for Übermodule does not exist! The module will use default settings instead.", _moduleId);
+            timerdashthres = 30;
+            countIgnored = true;
+        }
     }
     void Start() {
         currentlyRunning = PlaySolveState();
-        _moduleId = _moduleIdCounter++;
         selectable.OnInteract += delegate {
             selectable.AddInteractionPunch((float)0.5);
             if (!solved && !isplayAnim) {
@@ -364,8 +372,8 @@ public class UbermoduleHandler : MonoBehaviour {
             if (started && !isFinal)
             {
                 var list1 = Info.GetSolvedModuleNames().ToList();
-                if (countIgnored)// This divides the portion of the code. One part is the old portion for Ubermodule. The other is a variant of the old version
-                {
+                if (countIgnored)// This divides the portion of the code.
+                {//This part is for tracking both unignored and ignored modules.
                     if (CanUpdateCounterPlusBoss())
                     {
                         if (CanUpdateCounterNonBoss())
@@ -390,6 +398,7 @@ public class UbermoduleHandler : MonoBehaviour {
                             if (list1.Count > 1)
                             {
                                 list1.Sort();
+                                sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NeedyWarning, transform);
                                 Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
                             }
                             allSolved.AddRange(list1);
@@ -400,7 +409,7 @@ public class UbermoduleHandler : MonoBehaviour {
                     UpdateScreen(allSolved.Count().ToString());
                 }
                 else
-                {
+                {//This part is for tracking unignored modules only.
                     if (CanUpdateCounterNonBoss())
                     {
                         var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
@@ -413,6 +422,7 @@ public class UbermoduleHandler : MonoBehaviour {
                             if (list2.Count > 1)
                             { 
                                 list2.Sort();
+                                sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NeedyWarning, transform);
                                 Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
                             }
                                 

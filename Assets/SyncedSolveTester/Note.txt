@@ -1,0 +1,5 @@
+This module is used to test for frame perfect synchronized solves only.
+Usable in other boss modules in case for any reason for reproducing the synchromized solve issue.
+This module can be used for KTANE in game with some minor caution.
+- A Log File Analyzer is recommended to view the contents of this module if the module is placed ingame.
+- Text can be enabled otherwise.
