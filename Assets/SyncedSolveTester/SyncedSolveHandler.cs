@@ -9,7 +9,7 @@ public class SyncedSolveHandler : MonoBehaviour {
 	public TextMesh textMesh;
 
 
-	private static int delay = 60;
+	private static int delay;
 	private static bool startcd = false;
 
 	private readonly string[] possibleNames = new string[]
@@ -27,7 +27,10 @@ public class SyncedSolveHandler : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
+		delay = 60;
+		startcd = false;
 		ModSelf.ModuleDisplayName = possibleNames[Random.Range(0, possibleNames.Length)];
+		//ModSelf.ModuleDisplayName = "E";
 		if (Random.value < .5)
 		{
 			ModSelf.ModuleDisplayName += " " + possibleNames[Random.Range(0, possibleNames.Length)];

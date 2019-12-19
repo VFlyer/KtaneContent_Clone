@@ -14,8 +14,8 @@ public class UbermoduleHandler : MonoBehaviour {
     public GameObject button;
     public Renderer screen;
     public TextMesh text;
-    private List<string> unignoredSolved = new List<string>();
-    private List<string> allSolved = new List<string>();
+    private List<string> unignoredSolved = new List<string>(); // A list of all modules solved that are NOT in the ignore list.
+    private List<string> allSolved = new List<string>(); // A list of all modules solved in general.
     public KMBombModule ModSelf;
     public KMBombInfo Info;
     public KMAudio sound;
@@ -43,6 +43,7 @@ public class UbermoduleHandler : MonoBehaviour {
     private bool isplayAnim = false;
     private bool stateduringHold = false;
     private bool countIgnored = true;
+    private bool isCounting = false;
 
     private readonly string[] startupStrings = new string[]
     {
@@ -363,6 +364,83 @@ public class UbermoduleHandler : MonoBehaviour {
         return output;
     }
     // Update is called once per frame
+    IEnumerator UpdateSolveCount()
+    {
+        // Handle Sync Solves by waiting for 2 frames until the end.
+        yield return new WaitForEndOfFrame();
+        yield return new WaitForEndOfFrame();
+        
+        var list1 = Info.GetSolvedModuleNames().ToList();
+        if (countIgnored)// This divides the portion of the code.
+        {//This part is for tracking both unignored and ignored modules.
+            if (CanUpdateCounterPlusBoss())
+            {
+                if (CanUpdateCounterNonBoss())
+                {
+                    var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
+                    if (list2.Count() != unignoredSolved.Count())
+                    {
+                        foreach (String A in unignoredSolved)
+                        {
+                            list2.Remove(A);
+                        }
+                        unignoredSolved.AddRange(list2);
+
+                    }
+                }
+                if (list1.Count() != allSolved.Count())
+                {
+                    foreach (String A in allSolved)
+                    {
+                        list1.Remove(A);
+                    }
+                    if (list1.Count > 1)
+                    {
+                        list1.Sort();
+                        sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
+                        Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
+                    }
+                    allSolved.AddRange(list1);
+                    Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
+                    Debug.LogFormat("[Übermodule #{0}] Module(s) Recently Solved: {1}", _moduleId, FomatterDebugList(list1));
+                }
+            }
+            UpdateScreen(allSolved.Count().ToString());
+        }
+        else
+        {//This part is for tracking unignored modules only.
+            if (CanUpdateCounterNonBoss())
+            {
+                var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
+                if (list2.Count() != unignoredSolved.Count())
+                {
+                    foreach (String A in unignoredSolved)
+                    {
+                        list2.Remove(A);
+                    }
+                    if (list2.Count > 1)
+                    {
+                        list2.Sort();
+                        sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.EmergencyAlarm, transform);
+                        Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
+                    }
+
+                    unignoredSolved.AddRange(list2);
+                    Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
+                    Debug.LogFormat("[Übermodule #{0}] Unignored Recently Solved: {1}", _moduleId, FomatterDebugList(list2));
+
+                }
+            }
+            UpdateScreen(unignoredSolved.Count().ToString());
+        }
+        if (unignoredSolved.Count() >= solvables.Count())
+        {
+            StartCoroutine(PlayFinaleState());
+        }
+        isCounting = false;
+        yield return null;
+    }
+
     void Update() {
         if (!solved) {
             if (isHolding)
@@ -371,72 +449,10 @@ public class UbermoduleHandler : MonoBehaviour {
             }
             if (started && !isFinal)
             {
-                var list1 = Info.GetSolvedModuleNames().ToList();
-                if (countIgnored)// This divides the portion of the code.
-                {//This part is for tracking both unignored and ignored modules.
-                    if (CanUpdateCounterPlusBoss())
-                    {
-                        if (CanUpdateCounterNonBoss())
-                        {
-                            var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
-                            if (list2.Count() != unignoredSolved.Count())
-                            {
-                                foreach (String A in unignoredSolved)
-                                {
-                                    list2.Remove(A);
-                                }
-                                unignoredSolved.AddRange(list2);
-
-                            }
-                        }
-                        if (list1.Count() != allSolved.Count())
-                        {
-                            foreach (String A in allSolved)
-                            {
-                                list1.Remove(A);
-                            }
-                            if (list1.Count > 1)
-                            {
-                                list1.Sort();
-                                sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NeedyWarning, transform);
-                                Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
-                            }
-                            allSolved.AddRange(list1);
-                            Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
-                            Debug.LogFormat("[Übermodule #{0}] Module(s) Recently Solved: {1}", _moduleId, FomatterDebugList(list1));
-                        }
-                    }
-                    UpdateScreen(allSolved.Count().ToString());
-                }
-                else
-                {//This part is for tracking unignored modules only.
-                    if (CanUpdateCounterNonBoss())
-                    {
-                        var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
-                        if (list2.Count() != unignoredSolved.Count())
-                        {
-                            foreach (String A in unignoredSolved)
-                            {
-                                list2.Remove(A);
-                            }
-                            if (list2.Count > 1)
-                            { 
-                                list2.Sort();
-                                sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.NeedyWarning, transform);
-                                Debug.LogFormat("[Übermodule #{0}] Multiple modules have been solved within the exact same instance.", _moduleId);
-                            }
-                                
-                            unignoredSolved.AddRange(list2);
-                            Debug.LogFormat("[Übermodule #{0}] ---------- {1} Solved ----------", _moduleId, Info.GetSolvedModuleNames().Count());
-                            Debug.LogFormat("[Übermodule #{0}] Unignored Recently Solved: {1}", _moduleId, FomatterDebugList(list2));
-
-                        }
-                    }
-                    UpdateScreen(unignoredSolved.Count().ToString());
-                }
-                if (unignoredSolved.Count() >= solvables.Count())
+                if (!isCounting)
                 {
-                    StartCoroutine(PlayFinaleState());
+                    isCounting = true;
+                    StartCoroutine(UpdateSolveCount());
                 }
             }
         }
