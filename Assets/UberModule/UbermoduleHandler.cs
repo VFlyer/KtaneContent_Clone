@@ -366,10 +366,10 @@ public class UbermoduleHandler : MonoBehaviour {
     // Update is called once per frame
     IEnumerator UpdateSolveCount()
     {
-        // Handle Sync Solves by waiting for 2 frames until the end.
+        // Handle Sync Solves by waiting for 3 frames until the end.
         yield return new WaitForEndOfFrame();
         yield return new WaitForEndOfFrame();
-        
+        yield return new WaitForEndOfFrame();
         var list1 = Info.GetSolvedModuleNames().ToList();
         if (countIgnored)// This divides the portion of the code.
         {//This part is for tracking both unignored and ignored modules.
