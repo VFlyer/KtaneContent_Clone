@@ -6,13 +6,12 @@ using System;
 //using KModkit;
 //using System.Text;
 using System.Text.RegularExpressions;
-//using UnityEngine.UI;
-using Newtonsoft.Json;
+using uernd = UnityEngine.Random;
 
 public class UbermoduleHandler : MonoBehaviour {
     public static string[] ignores = null;
     public GameObject button;
-    public Renderer screen;
+    public Renderer screen, component;
     public TextMesh text;
     private List<string> unignoredSolved = new List<string>(); // A list of all modules solved that are NOT in the ignore list.
     private List<string> allSolved = new List<string>(); // A list of all modules solved in general.
@@ -39,13 +38,13 @@ public class UbermoduleHandler : MonoBehaviour {
     private double timeHeld = 0;
     private List<double> timesHeld = new List<double>();
 
-    public int timerdashthres = 30;
+    public double timerdashthres = 0.5;
     private bool isplayAnim = false;
     private bool stateduringHold = false;
-    private bool countIgnored = true;
+    private bool countIgnored = true, earlyStageGen, hardModeEnabled = false;
     private bool isCounting = false;
 
-    private readonly string[] startupStrings = new string[]
+    private readonly string[] startupStrings =
     {
         "Are you sure\nthis works?",
         "Attempt 11\nand counting...",
@@ -60,7 +59,17 @@ public class UbermoduleHandler : MonoBehaviour {
         "Simple,\nright?",
         "Just yes.",
         "Yes.",
-        "Yes, this\nexists."
+        "Yes, this\nexists.",
+        "Shoutouts.",
+        "Walk in the park.",
+        "A."
+    };
+
+    private readonly string[] startupStringsHardMode = 
+    {
+        "Hard Mode. Yes.\nIt's here now.",
+        "Did you think about this?",
+        "Here we go.",
     };
 
     private string cStageModName = "";
@@ -85,15 +94,21 @@ public class UbermoduleHandler : MonoBehaviour {
 
             timerdashthres = modConfig.Settings.timerdashthreshold;
             countIgnored = modConfig.Settings.countIgnoredModules;
+            earlyStageGen = modConfig.Settings.generateStagesEarly;
+            hardModeEnabled = modConfig.Settings.hardModeEnable;
         }
         catch
         {
-            Debug.LogErrorFormat("[Übermodule #{0}]: The settings for Übermodule does not exist! The module will use default settings instead.", _moduleId);
-            timerdashthres = 30;
+            Debug.LogErrorFormat("[Übermodule #{0}]: The settings for Übermodule does not work as intended! The module will use default settings instead.", _moduleId);
+            timerdashthres = 0.5d;
             countIgnored = true;
+            earlyStageGen = true;
+            hardModeEnabled = false;
         }
     }
     void Start() {
+        hardModeEnabled = false;
+        component.material.color = hardModeEnabled ? Color.red : Color.white;
         currentlyRunning = PlaySolveState();
         selectable.OnInteract += delegate {
             selectable.AddInteractionPunch((float)0.5);
@@ -164,7 +179,10 @@ public class UbermoduleHandler : MonoBehaviour {
             return;
         };
         Debug.LogFormat("[Übermodule #{0}] Entering Startup Phase...", _moduleId);
-        UpdateScreen(startupStrings[UnityEngine.Random.Range(0, startupStrings.Length)]);
+        if (hardModeEnabled)
+            UpdateScreen(startupStrings[uernd.Range(0, startupStrings.Length)]);
+        else
+            UpdateScreen(startupStringsHardMode[uernd.Range(0, startupStringsHardMode.Length)]);
         if (ignores == null) {
             ignores = GetComponent<KMBossModule>().GetIgnoredModules("Übermodule", new string[] {
                 "Bamboozling Time Keeper",
@@ -203,7 +221,7 @@ public class UbermoduleHandler : MonoBehaviour {
         Info.OnBombExploded += delegate {
             if (solved) return;
             Debug.LogFormat("[Übermodule #{0}] Upon bomb detonation:", _moduleId);
-            if (stagesNum == null || stagesNum.Length <= 0)
+            if (stagesNum == null || !stagesNum.Any())
             {
                 Debug.LogFormat("[Übermodule #{0}] Bomb detonated before stages were generated.", _moduleId);
                 return;
@@ -243,50 +261,110 @@ public class UbermoduleHandler : MonoBehaviour {
             }
             else
             {
-                Debug.LogFormat("[Übermodule #{0}] Non-ignored Modules: {1}", _moduleId, FomatterDebugList(solvables.ToArray())); // Prints ENTIRE list of modules not ignored.
+                Debug.LogFormat("<Übermodule #{0}> All non-ignored Modules: {1}", _moduleId, solvables.Join(",")); // Prints ENTIRE list of modules not ignored.
+                if (solvables.Count() > 20)
+                    Debug.LogFormat("[Übermodule #{0}] There are this many non-ignored Modules: {1} Some non-ignored modules are the following: {2}", _moduleId, solvables.Count(), solvables.OrderBy(a => uernd.Range(-32768, 32767)).Take(5).Join(", ")); // Prints the number of non-ignored modules on the bomb and then 5 notable non-ignored modules.
+                else
+                    Debug.LogFormat("[Übermodule #{0}] Non-ignored Modules: {1}", _moduleId, solvables.Join(",")); // Prints ENTIRE list of modules not ignored.
             }
             List<string> ignored = Info.GetSolvableModuleNames().Where(a => ignores.Contains(a)).ToList();
-            Debug.LogFormat("[Übermodule #{0}] Ignored Modules present (including itself): {1}", _moduleId, FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
+            Debug.LogFormat("<Übermodule #{0}> Ignored Modules present (including itself): {1}", _moduleId, FomatterDebugList(ignored.ToArray())); // Prints ENTIRE list of modules ignored.
             // Section used for debugging solvable modules end here.
 
-            stagesToGenerate = UnityEngine.Random.Range(3, 5);
-            stagesNum = new int[stagesToGenerate];
-            InputMethod = new string[stagesToGenerate];
-
-            var numbers = new int[solvables.Count()]; // Bag Randomizer starts here
-            for (int p = 0; p < solvables.Count(); p++) {
-                numbers[p] = p;
-            }
-            for (int p = 0; p < solvables.Count(); p++) {
-                var temp = -1;
-                var toreplace = UnityEngine.Random.Range(p, solvables.Count());
-                temp = numbers[p];
-                numbers[p] = numbers[toreplace];
-                numbers[toreplace] = temp;
-            }// Bag Randomizer ends here
-            for (int x = 0; x < stagesToGenerate; x++) {
-                var pickState = new string[] { "Tap Code", "Morse" };
-                var RandomState = "";
-                if (x < solvables.Count()) {
-                    stagesNum[x] = numbers[x];
-                    RandomState = pickState[UnityEngine.Random.Range(0, pickState.Count())];
-                } else {
-                    stagesNum[x] = -1;
+            // Stage Generation begins here.
+            if (earlyStageGen) // If the module is able to generate stages early...
+            {
+                if (hardModeEnabled)
+                {
+                    Debug.LogFormat("[Übermodule #{0}] Hard Mode is enabled! Normal stage generation procedures have been overridden.", _moduleId);
+                    return;
                 }
-                InputMethod[x] = RandomState;
-                if (stagesNum[x] >= 0) {
-                    if (RandomState.Equals("Morse"))
-                        Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Morse input.", _moduleId, numbers[x] + 1);
-                    else if (RandomState.Equals("Tap Code"))
-                        Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Tap Code input.", _moduleId, numbers[x] + 1);
+                stagesToGenerate = uernd.Range(3, 5);
+                stagesNum = new int[stagesToGenerate];
+                InputMethod = new string[stagesToGenerate];
+
+                var numbers = new int[solvables.Count()]; // Bag Randomizer starts here
+                for (int p = 0; p < solvables.Count(); p++)
+                {
+                    numbers[p] = p;
+                }
+                numbers = numbers.OrderBy(a => uernd.Range(int.MinValue, int.MaxValue)).ToArray();
+                // Bag Randomizer ends here
+                for (int x = 0; x < stagesToGenerate; x++)
+                {
+                    var pickState = new string[] { "Tap Code", "Morse" };
+                    var RandomState = "";
+                    if (x < solvables.Count())
+                    {
+                        stagesNum[x] = numbers[x];
+                        RandomState = pickState[uernd.Range(0, pickState.Count())];
+                    }
+                    else
+                    {
+                        stagesNum[x] = -1;
+                    }
+                    InputMethod[x] = RandomState;
+                    if (stagesNum[x] >= 0)
+                    {
+                        if (RandomState.Equals("Morse"))
+                            Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Morse input.", _moduleId, numbers[x] + 1);
+                        else if (RandomState.Equals("Tap Code"))
+                            Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Tap Code input.", _moduleId, numbers[x] + 1);
+                    }
                 }
             }
         };
-        if (countIgnored)
-            Debug.LogFormat("[Übermodule #{0}] This module WILL count ignored modules as potential stages.", _moduleId);
-        else
-            Debug.LogFormat("[Übermodule #{0}] This module WILL NOT count ignored modules as potential stages.", _moduleId);
+        Debug.LogFormat("[Übermodule #{0}] This module {1} count ignored modules as potential stages.", _moduleId, countIgnored ? "WILL" : "WILL NOT");
+        Debug.LogFormat("[Übermodule #{0}] This module will generate stages {1}.", _moduleId, earlyStageGen ? "EARLY" : "LATE");
     }
+
+    void GenerateLateStages()
+    {
+        if (hardModeEnabled)
+        {
+            Debug.LogFormat("[Übermodule #{0}] Hard Mode is enabled! Normal stage generation procedures have been overridden.", _moduleId);
+            return;
+        }
+        stagesToGenerate = uernd.Range(3, 5);
+        stagesNum = new int[stagesToGenerate];
+        InputMethod = new string[stagesToGenerate];
+
+        var numbers = new int[allSolved.Count()]; // Bag Randomizer starts here
+        for (int p = 0; p < allSolved.Count(); p++)
+        {
+            numbers[p] = p;
+        }
+        for (int p = 0; p < allSolved.Count(); p++)
+        {
+            var toreplace = uernd.Range(p, allSolved.Count());
+            var temp = numbers[p];
+            numbers[p] = numbers[toreplace];
+            numbers[toreplace] = temp;
+        }// Bag Randomizer ends here
+        for (int x = 0; x < stagesToGenerate; x++)
+        {
+            var pickState = new string[] { "Tap Code", "Morse" };
+            var RandomState = "";
+            if (x < allSolved.Count())
+            {
+                stagesNum[x] = numbers[x];
+                RandomState = pickState[uernd.Range(0, pickState.Count())];
+            }
+            else
+            {
+                stagesNum[x] = -1;
+            }
+            InputMethod[x] = RandomState;
+            if (stagesNum[x] >= 0)
+            {
+                if (RandomState.Equals("Morse"))
+                    Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Morse input.", _moduleId, numbers[x] + 1);
+                else if (RandomState.Equals("Tap Code"))
+                    Debug.LogFormat("[Übermodule #{0}] Generated manditory stage {1} requiring Tap Code input.", _moduleId, numbers[x] + 1);
+            }
+        }
+    }
+
     string FomatterDebugList(string[] list) // This one is more used compared to the one underneath.
     {
         string output = "";
@@ -297,7 +375,7 @@ public class UbermoduleHandler : MonoBehaviour {
         }
         return output;
     }
-    string FomatterDebugList(List<String> list)
+    string FomatterDebugList(List<string> list)
     {
         string output = "";
         for (int o = 0; o < list.Count(); o++) {
@@ -325,12 +403,8 @@ public class UbermoduleHandler : MonoBehaviour {
         if (clength > largestLength)
             largestLength = clength;
 
+        text.characterSize = value.Length != 0 ? 0.4f / Mathf.Pow(largestLength, (float)0.9) : 0.4f;
 
-        if (value.Length == 0) {
-            text.fontSize = 375;
-        } else {
-            text.fontSize = (int)((375 / Mathf.Pow(largestLength, (float)0.9)));
-        }
         text.text = value;
     }
     string SplitTextSpecial(string input)
@@ -435,17 +509,20 @@ public class UbermoduleHandler : MonoBehaviour {
         }
         if (unignoredSolved.Count() >= solvables.Count())
         {
+            if (!earlyStageGen) GenerateLateStages();
             StartCoroutine(PlayFinaleState());
         }
         isCounting = false;
         yield return null;
     }
 
-    void Update() {
-        if (!solved) {
+    void Update()
+    {
+        if (!solved)
+        {
             if (isHolding)
             {
-                timeHeld++;
+                timeHeld += Time.deltaTime;
             }
             if (started && !isFinal)
             {
@@ -457,29 +534,39 @@ public class UbermoduleHandler : MonoBehaviour {
             }
         }
     }
+
     IEnumerator GetStage(int cstage)
     {
         isplayAnim = true;
         sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.MenuButtonPressed, transform);
+        if (cstage >= 0 && stagesNum[cstage] >= 0)
+        {
+            Debug.LogFormat("[Übermodule #{0}] You need to input from the module that was solved {1}{2}.",
+                _moduleId, stagesNum[cstage] + 1,
+                new[] { 1, 21, 31, 41, 51, 61, 71, 81, 91 }.Contains((stagesNum[cstage] + 1) % 100) ? "st" :
+                new[] { 2, 22, 32, 42, 52, 62, 72, 82, 92 }.Contains((stagesNum[cstage] + 1) % 100) ? "nd" :
+                new[] { 3, 23, 33, 43, 53, 63, 73, 83, 93 }.Contains((stagesNum[cstage] + 1) % 100) ? "rd" :
+                "th"
+                );
+            if (InputMethod[currentStage].Equals("Morse"))
+            {
+                Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Morse.", _moduleId);
+            }
+            else if (InputMethod[currentStage].Equals("Tap Code"))
+            {
+                Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Tap Code.", _moduleId);
+            }
+            UpdateScreen((stagesNum[cstage] + 1).ToString());
+            Debug.LogFormat("[Übermodule #{0}] The solved module for that stage was: {1}", _moduleId, countIgnored ? allSolved[stagesNum[cstage]] : unignoredSolved[stagesNum[cstage]]);
+        }
+        else
+        {
+            Debug.LogFormat("[Übermodule #{0}] The module has ran out of stages to give.", _moduleId);
+            Debug.LogFormat("[Übermodule #{0}] Enforce a solve by clicking on this module 10 times.", _moduleId);
+            UpdateScreen("?");
+        }
         for (int cnt = 0; cnt < animationLength + 1; cnt++)
         {
-            if (cnt == 0) {
-                if (cstage >= 0 && stagesNum[cstage] >= 0) {
-                    Debug.LogFormat("[Übermodule #{0}] You need to input stage {1}.", _moduleId, stagesNum[cstage] + 1);
-                    if (InputMethod[currentStage].Equals("Morse")) {
-                        Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Morse.", _moduleId);
-                    }
-                    else if (InputMethod[currentStage].Equals("Tap Code")) {
-                        Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Tap Code.", _moduleId);
-                    }
-                    UpdateScreen((stagesNum[cstage] + 1).ToString());
-                    Debug.LogFormat("[Übermodule #{0}] The solved module for that stage was: {1}", _moduleId, countIgnored ? allSolved[stagesNum[cstage]] :unignoredSolved[stagesNum[cstage]]);
-                } else {
-                    Debug.LogFormat("[Übermodule #{0}] The modules has ran out of stages to input.", _moduleId);
-                    Debug.LogFormat("[Übermodule #{0}] Enforce a solve by clicking on this module 10 times.", _moduleId);
-                    UpdateScreen("?");
-                }
-            }
             if (InputMethod[currentStage].Equals("Morse")) {
                 text.color = new Color(1, 0, 0, (float)cnt / animationLength);
             } else if (InputMethod[currentStage].Equals("Tap Code")) {
@@ -488,7 +575,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 text.color = new Color(1, 1, 1, (float)cnt / animationLength);
             }
 
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
         isplayAnim = false;
     }
@@ -496,11 +583,12 @@ public class UbermoduleHandler : MonoBehaviour {
     IEnumerator PlayStrikeAnim(int cstage)
     {
         isplayAnim = true;
+        bool ccwSpin = uernd.Range(0, 2) == 1;
         for (int cnt = 0; cnt < animationLength; cnt++)
         {
-            text.transform.Rotate(Vector3.back * 6);
+            text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 6);
             text.color = new Color(1, 0, 0, (float)(1.0 - (float)cnt / animationLength));
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
         if (isFinal && cstage >= 0 && cstage < stagesNum.Count())
         {
@@ -511,7 +599,7 @@ public class UbermoduleHandler : MonoBehaviour {
         for (int cnt = 0; cnt < animationLength + 1; cnt++)
         {
             if (cnt < animationLength)
-                text.transform.Rotate(Vector3.back * 6);
+                text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 6);
             if (!isFinal) {
                 text.color = new Color(0, 0, 0, (float)cnt / animationLength);
             }
@@ -524,10 +612,11 @@ public class UbermoduleHandler : MonoBehaviour {
                     text.color = new Color(0, 0, 1, (float)cnt / animationLength);
                 }
             }
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
         isplayAnim = false;
     }
+    
     IEnumerator PlayFinaleState()
     {
         isplayAnim = true;
@@ -537,14 +626,16 @@ public class UbermoduleHandler : MonoBehaviour {
         for (int cnt = 0; cnt < 4 * animationLength; cnt++) {
             text.color = new Color(text.color.r, text.color.g, text.color.b, (float)(1.0 - (float)cnt / animationLength / 4));
 
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
             if ((cnt % 30 >= 15 || cnt <= 2 * animationLength) && cnt % 30 < 25)
                 screen.material = materials[0];
             else
                 screen.material = materials[1];
         }
         screen.material = materials[1];
+        if (hardModeEnabled) HandleHardModeStageGen();
         AdvanceStage();
+
         isplayAnim = false;
     }
     IEnumerator PlaySolveState()
@@ -553,28 +644,32 @@ public class UbermoduleHandler : MonoBehaviour {
         ModSelf.HandlePass();
         sound.PlayGameSoundAtTransformWithRef(KMSoundOverride.SoundEffect.CorrectChime, transform);
         Debug.LogFormat("[Übermodule #{0}] Module solved.", _moduleId);
-        string[] characters = new string[26] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
-        int randomstartB = UnityEngine.Random.Range(0, characters.Count());
-        int randomstartA = UnityEngine.Random.Range(0, characters.Count());
+        string[] characters = new string[] { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
+        int randomstartB = uernd.Range(0, characters.Count());
+        int randomstartA = uernd.Range(0, characters.Count());
         for (int cnt = 0; cnt < animationLength + 1; cnt++) {
             randomstartA++;
             randomstartB++;
             text.color = new Color(1, 1, 1, (float)cnt / animationLength);
             UpdateScreen(characters[(randomstartA) % characters.Count()] + characters[(randomstartB) % characters.Count()]);
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
         while (randomstartA % 26 != 6 || randomstartA < 52) {
             randomstartA++;
             randomstartB++;
             UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
         while (randomstartB % 26 != 6 || randomstartB < 104) {
             randomstartB++;
             UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(0.005f);
         }
-
+        for (int x = 255; x >= 0; x--)
+        {
+            text.color = new Color(1, 1, 1, (float)x / 255);
+            yield return new WaitForSeconds(0.005f);
+        }
     }
     bool CanUpdateCounterNonBoss()
     {
@@ -639,7 +734,7 @@ public class UbermoduleHandler : MonoBehaviour {
     }
     IEnumerator ReplayTapCodeInput(int input1, int input2)
     {
-        for (int x=0;x<input1;x++)
+        for (int x = 0; x < input1; x++)
         {
             sound.PlaySoundAtTransform("Tap", transform);
             yield return new WaitForSeconds(0.5f);
@@ -653,121 +748,294 @@ public class UbermoduleHandler : MonoBehaviour {
         yield return null;
     }
     string GetLetterFromMorse(string input)
-	{
-		switch (input) {
-			case ".":
-				return "E";
-			case "-":
-				return "T";
-			case ".-":
-				return "A";
-			case "-.":
-				return "N";
-			case "--":
-				return "M";
-			case "..":
-				return "I";
-			case "...":
-				return "S";
-			case ".-.":
-				return "R";
-			case "..-":
-				return "U";
-			case "-..":
-				return "D";
-			case ".--":
-				return "W";
-			case "-.-":
-				return "K";
-			case "--.":
-				return "G";
-			case "---":
-				return "O";
-			case "-.-.":
-				return "C";
-			case "..-.":
-				return "F";
-			case "-...":
-				return "B";
-			case ".--.":
-				return "P";
-			case "-.--":
-				return "Y";
-			case "--..":
-				return "Z";
-			case "...-":
-				return "V";
-			case "--.-":
-				return "Q";
-			case ".-..":
-				return "L";
-			case ".---":
-				return "J";
-			case "....":
-				return "H";
-			case "-..-":
-				return "X";
-			case ".----":
-				return "1";
-			case "..---":
-				return "2";
-			case "...--":
-				return "3";
-			case "....-":
-				return "4";
-			case ".....":
-				return "5";
-			case "-....":
-				return "6";
-			case "--...":
-				return "7";
-			case "---..":
-				return "8";
-			case "----.":
-				return "9";
-			case "-----":
-				return "0";
-			default:
-				return "?";
-		}
-	}
+    {
+        switch (input) {
+            case ".":
+                return "E";
+            case "-":
+                return "T";
+            case ".-":
+                return "A";
+            case "-.":
+                return "N";
+            case "--":
+                return "M";
+            case "..":
+                return "I";
+            case "...":
+                return "S";
+            case ".-.":
+                return "R";
+            case "..-":
+                return "U";
+            case "-..":
+                return "D";
+            case ".--":
+                return "W";
+            case "-.-":
+                return "K";
+            case "--.":
+                return "G";
+            case "---":
+                return "O";
+            case "-.-.":
+                return "C";
+            case "..-.":
+                return "F";
+            case "-...":
+                return "B";
+            case ".--.":
+                return "P";
+            case "-.--":
+                return "Y";
+            case "--..":
+                return "Z";
+            case "...-":
+                return "V";
+            case "--.-":
+                return "Q";
+            case ".-..":
+                return "L";
+            case ".---":
+                return "J";
+            case "....":
+                return "H";
+            case "-..-":
+                return "X";
+            case ".----":
+                return "1";
+            case "..---":
+                return "2";
+            case "...--":
+                return "3";
+            case "....-":
+                return "4";
+            case ".....":
+                return "5";
+            case "-....":
+                return "6";
+            case "--...":
+                return "7";
+            case "---..":
+                return "8";
+            case "----.":
+                return "9";
+            case "-----":
+                return "0";
+            default:
+                return "?";
+        }
+    }
     string GetFirstValidCharacter(string module)
     {
         var input = module.ToUpper();
         var output = "";
-        for (var currentindex = 0; currentindex<input.Length&&output.Length==0; currentindex++)
+        for (var currentindex = 0; currentindex < input.Length && output.Length == 0; currentindex++)
         {
             var currentLetter = input.Substring(currentindex, 1);
-            if (currentLetter.RegexMatch(@"[A-Z]|[a-z]|[0-9]"))
+            if (currentLetter.RegexMatch(@"^[A-Z]|[a-z]|[0-9]$"))
             {
                 output = currentLetter;
             }
         }
         return output;
     }
+    // Hard Mode Handling begins here
+    /*
+     * The idea of this hard mode variant is to make the defuser have to spell out 1 module name in some given method.
+     * Current difference at the moment for submission is 1 stage versus 3-5.
+     */
+    int currentPos = 0;
+    string attemptableStageName;
+    IEnumerator PlayStrikeAnimHardMode(string redisplayText)
+    {
+        isplayAnim = true;
+        bool ccwSpin = uernd.Range(0, 2) == 1;
+        for (int cnt = 0; cnt < animationLength; cnt++)
+        {
+            text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 6);
+            text.color = new Color(1, 0, 0, (float)(1.0 - (float)cnt / animationLength));
+            yield return new WaitForSeconds(0.005f);
+        }
+        
+        
+        string remainingLetters = redisplayText.Substring(currentPos);
+        foreach (char aLetter in remainingLetters)
+        {
+            UpdateScreen(aLetter.ToString());
+            for (int cnt = 0; cnt < 20; cnt++)
+            {
+                text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 18);
+                if (!isFinal)
+                {
+                    text.color = new Color(0, 0, 0, (float)cnt / 20);
+                }
+                else
+                {
+                    if (InputMethod[currentStage].Equals("Morse"))
+                    {
+                        text.color = new Color(1, 0, 0, (float)cnt / 20);
+                    }
+                    else if (InputMethod[currentStage].Equals("Tap Code"))
+                    {
+                        text.color = new Color(0, 0, 1, (float)cnt / 20);
+                    }
+                }
+                yield return new WaitForSeconds(0.005f);
+            }
+            for (int cnt = 20 - 1; cnt >= 0; cnt--)
+            {
+                text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 18);
+                if (!isFinal)
+                {
+                    text.color = new Color(0, 0, 0, (float)cnt / 20);
+                }
+                else
+                {
+                    if (InputMethod[currentStage].Equals("Morse"))
+                    {
+                        text.color = new Color(1, 0, 0, (float)cnt / 20);
+                    }
+                    else if (InputMethod[currentStage].Equals("Tap Code"))
+                    {
+                        text.color = new Color(0, 0, 1, (float)cnt / 20);
+                    }
+                }
+                yield return new WaitForSeconds(0.005f);
+            }
+
+        }
+        if (isFinal)
+        {
+            Debug.LogFormat("[Übermodule #{0}] Revealing the next letter that should be inputted instead.", _moduleId);
+            UpdateScreen(redisplayText.Substring(currentPos, 1));
+        }
+        for (int cnt = 0; cnt < animationLength + 1; cnt++)
+        {
+            if (cnt < animationLength)
+                text.transform.Rotate((ccwSpin ? Vector3.forward : Vector3.back) * 6);
+            if (!isFinal)
+            {
+                text.color = new Color(0, 0, 0, (float)cnt / animationLength);
+            }
+            else
+            {
+                if (InputMethod[currentStage].Equals("Morse"))
+                {
+                    text.color = new Color(1, 0, 0, (float)cnt / animationLength);
+                }
+                else if (InputMethod[currentStage].Equals("Tap Code"))
+                {
+                    text.color = new Color(0, 0, 1, (float)cnt / animationLength);
+                }
+            }
+            yield return new WaitForSeconds(0.005f);
+        }
+        
+        isplayAnim = false;
+    }
+    string GetAllValidCharacters(string module)
+    {
+        var input = module.ToUpper();
+        var output = "";
+        for (var currentindex = 0; currentindex < input.Length; currentindex++)
+        {
+            var currentLetter = input.Substring(currentindex, 1);
+            if (currentLetter.RegexMatch(@"^[A-Z]|[a-z]|[0-9]$"))
+            {
+                output += currentLetter;
+            }
+        }
+        return output;
+    }
+    void HandleHardModeStageGen()
+    {
+        List<string> allSolvableStageDisplayNames = new List<string>();
+        List<string> allSolvableStageInputsRequired = new List<string>();
+        List<int> allPossibleStages = new List<int>();
+        for (int x = 0; x < (earlyStageGen ? unignoredSolved.Count : allSolved.Count); x++)
+        {
+            var aStageModName = countIgnored ? allSolved[x] : unignoredSolved[x];
+            if (aStageModName.RegexMatch(@"^The\s"))
+            {
+                aStageModName = aStageModName.Substring(4);
+            }
+            var allLetters = GetAllValidCharacters(aStageModName);
+            if (allLetters.Any())
+            {
+                allSolvableStageInputsRequired.Add(allLetters.ToUpper());
+                allSolvableStageDisplayNames.Add(aStageModName);
+                allPossibleStages.Add(x);
+            }
+        }
+        stagesToGenerate = 1;
+        if (allPossibleStages.Any())
+        {
+            int idxGivenStage = allPossibleStages.IndexOf(uernd.Range(0, allPossibleStages.Count));
+            attemptableStageName = allSolvableStageInputsRequired[idxGivenStage];
+            Debug.LogFormat("[Übermodule #{0}] There is at least 1 module on the bomb whose display name contain at least 1 valid letter.", _moduleId);
+            Debug.LogFormat("[Übermodule #{0}] Required sequence of letters: {1}", _moduleId, attemptableStageName);
+            Debug.LogFormat("[Übermodule #{0}] From the module \"{1}\" (the module that advanced the counter to {2})", _moduleId, allSolvableStageDisplayNames[idxGivenStage], allPossibleStages[idxGivenStage] + 1);
+            stagesNum = new int[] { allPossibleStages[idxGivenStage] };
+            InputMethod = new string[] { uernd.value < 0.5 ? "Tap Code" : "Morse" };
+        }
+        else
+        {
+            stagesNum = new int[] { -1 };
+            InputMethod = new string[] { "" };
+        }
+    }
+    
+    bool IsCorrectHardModeSubmission(char input)
+    {
+        if (attemptableStageName != null && currentPos >= 0 && currentPos < attemptableStageName.Length)
+            return input == attemptableStageName[currentPos];
+        Debug.LogFormat("[Übermodule #{0}] The given attemptable stage name does not have any valid letters. This might be unintended. Auto-assuming the letter given is correct.", _moduleId);
+        return true;
+    }
+    void HandleCorrectHardModeSubmission()
+    {
+        currentPos++;
+        if (currentPos >= attemptableStageName.Length || currentPos < 0)
+        {
+            Debug.LogFormat("[Übermodule #{0}] Correctly spelt out the remaining letters.", _moduleId);
+            StartCoroutine(PlaySolveState());
+        }
+        else
+        {
+            sound.PlayGameSoundAtTransform(KMSoundOverride.SoundEffect.TitleMenuPressed, transform);
+            text.color = new Color(text.color.r, text.color.g, text.color.b, 1f);
+            UpdateScreen((1 + stagesNum[0]).ToString()+"+" + currentPos.ToString());
+        }
+    }
+    // End Hard Mode Handling
     bool IsCorrect(string input)
 	{
-		cStageModName = countIgnored ? allSolved[stagesNum[currentStage]] : cStageModName = unignoredSolved[stagesNum[currentStage]];
+        cStageModName = countIgnored ? allSolved[stagesNum[currentStage]] : unignoredSolved[stagesNum[currentStage]];
         if (Regex.IsMatch(cStageModName, @"^The\s"))// Filter out the word "The " at the start of the module name, if present
         {
-			cStageModName = cStageModName.Substring (4);;
+            cStageModName = cStageModName.Substring(4);
 		}
         var letterRequired = GetFirstValidCharacter(cStageModName);
-        if (letterRequired.Length != 0)
+        if (letterRequired.Any())
         {
-            Debug.LogFormat("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId, letterRequired, input);
+            //Debug.LogFormat("[Übermodule #{0}] Checking \"{1}\" with \"{2}\"...", _moduleId, letterRequired, input);
             return input.EqualsIgnoreCase(letterRequired);
         }
-        Debug.LogFormat("[Übermodule #{0}] There is no valid detectable character from this. Skipping check...", _moduleId, letterRequired, input);
+        Debug.LogFormat("[Übermodule #{0}] There is no valid detectable character from the given module name. Skipping check...", _moduleId);
         return true;
 	}
-	IEnumerator CheckMorse()
+    IEnumerator CheckSample()
+    {
+        yield return null;
+    }
+    IEnumerator CheckMorse()
 	{
-        for (int cnt = 0; cnt < 120; cnt++)
+        for (int cnt = 0; cnt < 120; cnt++) // Submission Delay
         {
 			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/90));
 
-            yield return new WaitForSeconds(0);
+            yield return new WaitForSeconds(1/120f);
         }
 		var morseIn = "";
 		for (int x = 0; x < timesHeld.Count (); x++) {
@@ -779,56 +1047,113 @@ public class UbermoduleHandler : MonoBehaviour {
 		}
 		var letterInputted = GetLetterFromMorse(morseIn);
 		timesHeld.Clear ();
-		if (IsCorrect(letterInputted)) {
-			AdvanceStage ();
-		} else {
-			UpdateScreen (letterInputted);
-			if (letterInputted.Equals ("?")) {
-				Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Morse!",_moduleId);
-				Debug.LogFormat("[Übermodule #{0}] The recorded input: {1} is not valid for Morse.",_moduleId,morseIn);
-			}
-			else{
-				Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!",_moduleId,letterInputted);
-			}
-			ModSelf.HandleStrike ();
-			StartCoroutine (PlayStrikeAnim (currentStage));
-            yield return new WaitForSeconds(animationLength / 15);
-            StartCoroutine(ReplayMorseInput(morseIn));
+        if (hardModeEnabled)
+        {
+            if (IsCorrectHardModeSubmission(letterInputted[0]))
+            {
+                HandleCorrectHardModeSubmission();
+            }
+            else
+            {
+                UpdateScreen(letterInputted);
+                if (letterInputted.Equals("?"))
+                {
+                    Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Morse!", _moduleId);
+                    Debug.LogFormat("[Übermodule #{0}] The recorded input: {1} is not valid for Morse.", _moduleId, morseIn);
+                }
+                else
+                {
+                    Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!", _moduleId, letterInputted);
+                }
+                ModSelf.HandleStrike();
+                StartCoroutine(PlayStrikeAnimHardMode(attemptableStageName));
+                yield return new WaitForSecondsRealtime(animationLength / 15);
+                StartCoroutine(ReplayMorseInput(morseIn));
+            }
+        }
+        else
+        {
+            if (IsCorrect(letterInputted))
+            {
+                AdvanceStage();
+            }
+            else
+            {
+                UpdateScreen(letterInputted);
+                if (letterInputted.Equals("?"))
+                {
+                    Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Morse!", _moduleId);
+                    Debug.LogFormat("[Übermodule #{0}] The recorded input: {1} is not valid for Morse.", _moduleId, morseIn);
+                }
+                else
+                {
+                    Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!", _moduleId, letterInputted);
+                }
+                ModSelf.HandleStrike();
+                StartCoroutine(PlayStrikeAnim(currentStage));
+                yield return new WaitForSecondsRealtime(animationLength / 15);
+                StartCoroutine(ReplayMorseInput(morseIn));
+            }
         }
 		yield return null;
 	}
 	private int TapCodeInput1 = 0;
 	IEnumerator CheckTapCode()
 	{
-		var GridLetters = new[] {
-			new[] {"A","B","C","D","E","1"},
-			new[] {"F","G","H","I","J","2"},
-			new[] {"L","M","N","O","P","3"},
-			new[] {"Q","R","S","T","U","4"},
-			new[] {"V","W","X","Y","Z","5"},
-			new[] {"6","7","8","9","0","K"}
+		var GridLetters = new[,] {
+			 {"A","B","C","D","E","1"},
+			 {"F","G","H","I","J","2"},
+			 {"L","M","N","O","P","3"},
+			 {"Q","R","S","T","U","4"},
+			 {"V","W","X","Y","Z","5"},
+			 {"6","7","8","9","0","K"}
 		};// Grid for Tap Code, not a lot of use otherwise.
-        for (int cnt = 0; cnt < 120; cnt++)
+        for (int cnt = 0; cnt < 120; cnt++) // Submission Delay
         {
 			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/90));
 
-            yield return new WaitForSeconds(0);
-		}
+            yield return new WaitForSecondsRealtime(1 / 120f);
+        }
 		sound.PlaySoundAtTransform ("MiniTap",transform);
 		if (TapCodeInput1 == 0) {
 			TapCodeInput1 = timesHeld.Count ();
 			timesHeld.Clear ();
-			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)1.0);
+            text.color = new Color(text.color.r, text.color.g, text.color.b, (float)1.0);
 		}
-			else
+        else
 		{
-			var TapCodeInput2 = timesHeld.Count ();
+            var TapCodeInput2 = timesHeld.Count();
 			timesHeld.Clear ();
 			var letterInputted = "?";
 			if ((TapCodeInput1 >= 1 && TapCodeInput1 <= 6) && (TapCodeInput2 >= 1 && TapCodeInput2 <= 6)) {
-				letterInputted = GridLetters [TapCodeInput1 - 1] [TapCodeInput2 - 1];
+				letterInputted = GridLetters [TapCodeInput1 - 1, TapCodeInput2 - 1];
 			}
-			if (IsCorrect(letterInputted)) {
+            if (hardModeEnabled)
+            {
+                if (IsCorrectHardModeSubmission(letterInputted[0]))
+                {
+                    HandleCorrectHardModeSubmission();
+                }
+                else
+                {
+                    UpdateScreen(letterInputted);
+                    if (letterInputted.Equals("?"))
+                    {
+                        Debug.LogFormat("[Übermodule #{0}] Strike! The module could NOT reference a valid letter or digit for Tap Code!", _moduleId);
+                        Debug.LogFormat("[Übermodule #{0}] The recorded input: {1}, {2} is not a valid for Tap Code.", _moduleId, TapCodeInput1, TapCodeInput2);
+                    }
+                    else
+                    {
+                        Debug.LogFormat("[Übermodule #{0}] Strike! \"{1}\" was inputted which is not correct!", _moduleId, letterInputted);
+                    }
+                    ModSelf.HandleStrike();
+                    StartCoroutine(PlayStrikeAnimHardMode(attemptableStageName));
+                    yield return new WaitForSecondsRealtime(animationLength / 15);
+                    StartCoroutine(ReplayTapCodeInput(TapCodeInput1, TapCodeInput2));
+                }
+            }
+            else
+            if (IsCorrect(letterInputted)) {
 				AdvanceStage ();
 			} else {
 				UpdateScreen (letterInputted);
@@ -847,11 +1172,13 @@ public class UbermoduleHandler : MonoBehaviour {
 		}
 		yield return null;
 	}
-    //KM Mod Settings
+    //KM Mod Settings/Settings for Ubermodule
     public class UberModuleModSettings
     {
-        public int timerdashthreshold = 30;
+        public double timerdashthreshold = 0.5d;
         public bool countIgnoredModules = true;
+        public bool generateStagesEarly = true;
+        public bool hardModeEnable = false;
     }
     static readonly Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
       {
@@ -868,19 +1195,31 @@ public class UbermoduleHandler : MonoBehaviour {
                     new Dictionary<string, object>
                     {
                         { "Key", "timerdashthreshold" },
-                        { "Text", "Sets the time in 1/30 of a second to convert a dot into a dash." }
+                        { "Text", "The time it takes to hold for the module to interept a dash instead of a dot." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "generateStagesEarly" },
+                        { "Text", "Generates stages for Ubermodule as early as possible. This only considers solvable modules on the bomb, rather than all stages." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "hardModeEnable" },
+                        { "Text", "Make Übermodule start in hard mode. This requires inputting the ENTIRE sequence of letters to disarm the module for only 1 stage." }
                     },
                 } }
             }
       };
-    //Twitch Plays
+    //Twitch Plays Handler
 	#pragma warning disable 414
-    private readonly string TwitchHelpMessage = @"To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam. If there is already 1 input in Tap code, use !{0} tap 5 to enter the second input (must exactly be a single number) or !{0} reset to reset the input. However, reset command will NOT work if Morse Code was entered when the module was expecting Tap Code";
+    private readonly string TwitchHelpMessage = "To submit with Tap code, use !{0} tap/press 42 (Must be exactly two numbers and must be in the range of 1 to 9). To submit with Morse code, use !{0} transmit/tx -..- To click the screen multiple times until the module solves, use !{0} spam. If there is already 1 input in Tap code, use !{0} tap 5 to enter the second input (must exactly be a single number) or !{0} reset to reset the input. However, reset command will NOT work if Morse Code was entered when the module was expecting Tap Code";
     #pragma warning restore 414
 	
 	private bool morseCodeOnTapCode = false;
     IEnumerator ProcessTwitchCommand(string command)
     {
+        // Old TP Handler by kavinkul
+        
 		int inputMode = 0;
 		bool isSecond = false;
 		command = command.ToLowerInvariant();
@@ -890,8 +1229,10 @@ public class UbermoduleHandler : MonoBehaviour {
 		if(TapCodeInput1 == 0) morseCodeOnTapCode = false; //Ensure that the reset command would work the second time after morse code type input is entered into tap code.
 		if(command.Equals("reset"))
 		{
+            yield return null;
 			if(!morseCodeOnTapCode) TapCodeInput1 = 0; //Reset Tap code input in a case where the command is unexpectedly halted, or there is a direct interaction to the module outside TP.
 			else yield return "sendtochaterror Can't reset the module due to Morse Code was used to enter the first input of Tap Code.";
+            yield break;
 		}
 		else if(command.Equals("spam"))
 		{
@@ -926,13 +1267,13 @@ public class UbermoduleHandler : MonoBehaviour {
 		command = command.Trim();
 		int[] input = new int[command.Length];
 		
-		/* Parsing and validate the input string. */
-		
+        ///* Parsing and validate the input string. */
+        
 		int outnumber;
 		switch(inputMode)
 		{
-			case 1:
-			/* If no input has been entered, then expects two taps. If a single input have been entered, then expects one tap.*/
+			case 1: // Tap Code Processing
+			// If no input has been entered, then expects two taps. If a single input have been entered, then expects one tap. 
 			if ((TapCodeInput1 == 0 && command.Length == 2)||(TapCodeInput1 != 0 && command.Length == 1))
 			{
 				for (int i = 0; i < command.Length; i++)
@@ -947,12 +1288,30 @@ public class UbermoduleHandler : MonoBehaviour {
 			}
 			else
 			{
-				if(TapCodeInput1 == 0) yield return "sendtochaterror Invalid commands: Expect a PAIR of numbers for Tap code.";
+                if (command.RegexMatch(@"^\d\s\d$"))
+                    {
+                        var possibleDigits = command.Split();
+                        var pointerPos = 0;
+                        foreach (string aDigit in possibleDigits)
+                        {
+                            if (!int.TryParse(aDigit, out outnumber) || outnumber <= 0 || outnumber > 9)
+                            {
+                                yield return "sendtochaterror Invalid commands: Tap code valid characters are numbers from 1 to 9.";
+                                yield break;
+                            }
+                            input[pointerPos] = outnumber;
+                            pointerPos++;
+                        }
+                        input = input.Take(2).ToArray();
+                        break;
+                    }
+
+                if(TapCodeInput1 == 0) yield return "sendtochaterror Invalid commands: Expect a PAIR of numbers for Tap code.";
 				else yield return "sendtochaterror Invalid commands: Expect a SINGLE number for Tap code.";
 				yield break;
 			}				
 			break;
-			case 2:
+			case 2: // Morse Code Processing
 			for (int i = 0; i < command.Length; i++)
 			{
 				switch(command[i])
@@ -964,7 +1323,7 @@ public class UbermoduleHandler : MonoBehaviour {
 					input[i] = 1;
 					break;
 					default :
-					yield return "sendtochaterror Invalid commands: Acceptable inputs for Morse code are '.', '-'.";
+					yield return string.Format("sendtochaterror Invalid morse character \"{0}\": Acceptable inputs for Morse code are '.', '-'.",command[i]);
 					yield break;
 				}
 			}
@@ -984,7 +1343,7 @@ public class UbermoduleHandler : MonoBehaviour {
 					yield return selectable;
 					yield return new WaitForSeconds(0.05f);
 				}
-				/* Check if the expected inputs must be in Tap Code, whether it is the first input set, and ensure that there is no more than 9 taps.*/
+				// Check if the expected inputs must be in Tap Code, whether it is the first input set, and ensure that there is no more than 9 taps.
 				if (!isSecond && InputMethod[currentStage].Equals("Tap Code") && k <= 9)
 				{
 					yield return new WaitUntil(() => TapCodeInput1 != 0);
@@ -1015,7 +1374,8 @@ public class UbermoduleHandler : MonoBehaviour {
 					case 1:
 					yield return selectable;
 					yield return new WaitUntil(() => timeHeld > timerdashthres);
-					yield return selectable;
+                    //Debug.LogFormat("<Übermodule #{0}> {1} > {2}", _moduleId,timeHeld,timerdashthres);
+                    yield return selectable;
 					yield return new WaitForSeconds(0.1f);					
 					break;
 				}
@@ -1035,7 +1395,7 @@ public class UbermoduleHandler : MonoBehaviour {
 			yield return "strike";
 			break;
 			case 4:
-			/* When the module is not ready to solve. */
+			// When the module is not ready to solve. 
 			yield return selectable;
 			yield return new WaitForSeconds(0.05f);
 			yield return selectable;
@@ -1043,15 +1403,15 @@ public class UbermoduleHandler : MonoBehaviour {
 			yield return "strike";
 			break;
 		}
-		yield break;
+        yield break;
 	}
 
     private readonly string[] forceSolveTexts = new string[] { "It was\nauto-solved!\n:'(", "Halting...", "Auto-solved.", "Auto-solved.\n:(" };
 	IEnumerator TwitchHandleForcedSolve()
     {
         yield return null;
-		UpdateScreen(forceSolveTexts[UnityEngine.Random.Range(0,forceSolveTexts.Count())]);
-        Debug.LogFormat("[Übermodule #{0}] Module forced-solved viva TP solve command.", _moduleId);
         solved = true;
+        UpdateScreen(forceSolveTexts[uernd.Range(0,forceSolveTexts.Count())]);
+        Debug.LogFormat("[Übermodule #{0}] Module forced-solved viva TP solve command.", _moduleId);
     }
 }
