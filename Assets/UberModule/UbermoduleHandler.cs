@@ -19,7 +19,7 @@ public class UbermoduleHandler : MonoBehaviour {
     public KMBombInfo Info;
     public KMAudio sound;
     public KMSelectable selectable;
-    public KMModSettings options;
+    //public KMModSettings options;
     private static int _moduleIdCounter = 1;
     private int _moduleId = 0;
     private bool isFinal = false;
@@ -35,13 +35,13 @@ public class UbermoduleHandler : MonoBehaviour {
     private List<string> solvables = new List<string>();
 
     private bool isHolding = false;
-    private double timeHeld = 0;
+    private float timeHeld = 0;
     private List<double> timesHeld = new List<double>();
 
-    public double timerdashthres = 0.5;
+    public float timerdashthres = 0.5f;
     private bool isplayAnim = false;
     private bool stateduringHold = false;
-    private bool countIgnored = true, earlyStageGen, hardModeEnabled = false;
+    private bool countIgnored = true, earlyStageGen, hardModeEnabled = false, useLegacyTiming;
     private bool isCounting = false;
 
     private readonly string[] startupStrings =
@@ -61,12 +61,13 @@ public class UbermoduleHandler : MonoBehaviour {
         "Yes.",
         "Yes, this\nexists.",
         "Shoutouts.",
-        "Walk in the park.",
+        "Walk in\nthe park.",
         "A."
     };
 
     private readonly string[] startupStringsHardMode = 
     {
+        "Oh no!\nNot another\nhard mode!",
         "Hard Mode. Yes.\nIt's here now.",
         "Did you think about this?",
         "Here we go.",
@@ -90,20 +91,22 @@ public class UbermoduleHandler : MonoBehaviour {
             settings = modConfig.Settings;
             // Update settings file incase of error during read
             modConfig.Settings = settings;
-            options.RefreshSettings();
+            //options.RefreshSettings();
 
-            timerdashthres = modConfig.Settings.timerdashthreshold;
             countIgnored = modConfig.Settings.countIgnoredModules;
             earlyStageGen = modConfig.Settings.generateStagesEarly;
             hardModeEnabled = modConfig.Settings.hardModeEnable;
+            useLegacyTiming = modConfig.Settings.useLegacyTiming;
+            timerdashthres = useLegacyTiming ? modConfig.Settings.timerdashthreshold : modConfig.Settings.dashTimeLengthModern;
         }
         catch
         {
             Debug.LogErrorFormat("[Übermodule #{0}]: The settings for Übermodule does not work as intended! The module will use default settings instead.", _moduleId);
-            timerdashthres = 0.5d;
+            timerdashthres = 0.5f;
             countIgnored = true;
             earlyStageGen = true;
             hardModeEnabled = false;
+            useLegacyTiming = false;
         }
     }
     void Start() {
@@ -128,6 +131,7 @@ public class UbermoduleHandler : MonoBehaviour {
         selectable.OnInteractEnded += delegate {
             if (!solved && !isplayAnim && (!stateduringHold))// Detect if the module is solved, playing an animation, or being held while the animation is playing
             {
+                Debug.LogFormat("<Übermodule #{0}> Time held:  {1} {2}.", _moduleId, useLegacyTiming ? timeHeld.ToString() : timeHeld.ToString("0.00"), useLegacyTiming ? "frame(s)" : "second(s)");
                 isHolding = false;
                 //print (timeHeld);
                 timesHeld.Add(timeHeld);
@@ -179,7 +183,7 @@ public class UbermoduleHandler : MonoBehaviour {
             return;
         };
         Debug.LogFormat("[Übermodule #{0}] Entering Startup Phase...", _moduleId);
-        if (hardModeEnabled)
+        if (!hardModeEnabled)
             UpdateScreen(startupStrings[uernd.Range(0, startupStrings.Length)]);
         else
             UpdateScreen(startupStringsHardMode[uernd.Range(0, startupStringsHardMode.Length)]);
@@ -255,7 +259,7 @@ public class UbermoduleHandler : MonoBehaviour {
             started = true;
             // Section used for debugging solvable modules start here.
             solvables = Info.GetSolvableModuleNames().Where(a => !ignores.Contains(a)).ToList();
-            if (solvables.Count() == 0)
+            if (!solvables.Any())
             {
                 Debug.LogFormat("[Übermodule #{0}] There are 0 non-ignored modules.", _moduleId);
             }
@@ -316,6 +320,7 @@ public class UbermoduleHandler : MonoBehaviour {
         };
         Debug.LogFormat("[Übermodule #{0}] This module {1} count ignored modules as potential stages.", _moduleId, countIgnored ? "WILL" : "WILL NOT");
         Debug.LogFormat("[Übermodule #{0}] This module will generate stages {1}.", _moduleId, earlyStageGen ? "EARLY" : "LATE");
+        Debug.LogFormat("[Übermodule #{0}] All dashes will be registered on the module when holding for more than {1} {2}.", _moduleId, useLegacyTiming ? timerdashthres.ToString() : timerdashthres.ToString("0.00"), useLegacyTiming ? "frame(s)" : "second(s)");
     }
 
     void GenerateLateStages()
@@ -522,7 +527,8 @@ public class UbermoduleHandler : MonoBehaviour {
         {
             if (isHolding)
             {
-                timeHeld += Time.deltaTime;
+                if (timeHeld <= timerdashthres)
+                    timeHeld += useLegacyTiming ? 1 : Time.deltaTime;
             }
             if (started && !isFinal)
             {
@@ -651,7 +657,7 @@ public class UbermoduleHandler : MonoBehaviour {
             randomstartA++;
             randomstartB++;
             text.color = new Color(1, 1, 1, (float)cnt / animationLength);
-            UpdateScreen(characters[(randomstartA) % characters.Count()] + characters[(randomstartB) % characters.Count()]);
+            UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
             yield return new WaitForSeconds(0.005f);
         }
         while (randomstartA % 26 != 6 || randomstartA < 52) {
@@ -665,11 +671,12 @@ public class UbermoduleHandler : MonoBehaviour {
             UpdateScreen(characters[randomstartA % characters.Count()] + characters[randomstartB % characters.Count()]);
             yield return new WaitForSeconds(0.005f);
         }
-        for (int x = 255; x >= 0; x--)
+        for (float x = 3f; x >= 0; x -= Time.deltaTime)
         {
-            text.color = new Color(1, 1, 1, (float)x / 255);
-            yield return new WaitForSeconds(0.005f);
+            text.color = new Color(1, 1, 1, x / 3f);
+            yield return null;
         }
+        text.color = new Color(1, 1, 1, 0);
     }
     bool CanUpdateCounterNonBoss()
     {
@@ -702,7 +709,7 @@ public class UbermoduleHandler : MonoBehaviour {
             } else {
                 UpdateScreen("\u2022");
             }
-            yield return new WaitForSeconds(0);
+            yield return null;
         }
         //UpdateScreen ((stagesNum[currentStage]+1).ToString());
         yield return null;
@@ -1025,17 +1032,13 @@ public class UbermoduleHandler : MonoBehaviour {
         Debug.LogFormat("[Übermodule #{0}] There is no valid detectable character from the given module name. Skipping check...", _moduleId);
         return true;
 	}
-    IEnumerator CheckSample()
-    {
-        yield return null;
-    }
     IEnumerator CheckMorse()
 	{
-        for (int cnt = 0; cnt < 120; cnt++) // Submission Delay
+        for (float cnt = 0; cnt < 1.5f; cnt += Time.deltaTime) // Submission Delay
         {
-			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/90));
+            text.color = new Color(text.color.r, text.color.g, text.color.b, (1.125f - cnt)/1.125f);
 
-            yield return new WaitForSeconds(1/120f);
+            yield return null;
         }
 		var morseIn = "";
 		for (int x = 0; x < timesHeld.Count (); x++) {
@@ -1067,7 +1070,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 }
                 ModSelf.HandleStrike();
                 StartCoroutine(PlayStrikeAnimHardMode(attemptableStageName));
-                yield return new WaitForSecondsRealtime(animationLength / 15);
+                yield return new WaitForSeconds(2f);
                 StartCoroutine(ReplayMorseInput(morseIn));
             }
         }
@@ -1091,7 +1094,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 }
                 ModSelf.HandleStrike();
                 StartCoroutine(PlayStrikeAnim(currentStage));
-                yield return new WaitForSecondsRealtime(animationLength / 15);
+                yield return new WaitForSeconds(2f);
                 StartCoroutine(ReplayMorseInput(morseIn));
             }
         }
@@ -1108,17 +1111,17 @@ public class UbermoduleHandler : MonoBehaviour {
 			 {"V","W","X","Y","Z","5"},
 			 {"6","7","8","9","0","K"}
 		};// Grid for Tap Code, not a lot of use otherwise.
-        for (int cnt = 0; cnt < 120; cnt++) // Submission Delay
+        for (float cnt = 0; cnt < 1.5f; cnt += Time.deltaTime) // Submission Delay
         {
-			text.color = new Color(text.color.r,text.color.g,text.color.b,(float)(1.0-(float)cnt/90));
+            text.color = new Color(text.color.r, text.color.g, text.color.b, (1.125f - cnt) / 1.125f);
 
-            yield return new WaitForSecondsRealtime(1 / 120f);
+            yield return null;
         }
 		sound.PlaySoundAtTransform ("MiniTap",transform);
 		if (TapCodeInput1 == 0) {
 			TapCodeInput1 = timesHeld.Count ();
 			timesHeld.Clear ();
-            text.color = new Color(text.color.r, text.color.g, text.color.b, (float)1.0);
+            text.color = new Color(text.color.r, text.color.g, text.color.b, 1f);
 		}
         else
 		{
@@ -1148,7 +1151,7 @@ public class UbermoduleHandler : MonoBehaviour {
                     }
                     ModSelf.HandleStrike();
                     StartCoroutine(PlayStrikeAnimHardMode(attemptableStageName));
-                    yield return new WaitForSecondsRealtime(animationLength / 15);
+                    yield return new WaitForSeconds(2f);
                     StartCoroutine(ReplayTapCodeInput(TapCodeInput1, TapCodeInput2));
                 }
             }
@@ -1165,7 +1168,7 @@ public class UbermoduleHandler : MonoBehaviour {
 				}
 				ModSelf.HandleStrike ();
 				StartCoroutine (PlayStrikeAnim (currentStage));
-                yield return new WaitForSeconds(animationLength/15);
+                yield return new WaitForSeconds(2f);
                 StartCoroutine(ReplayTapCodeInput(TapCodeInput1, TapCodeInput2));
             }
 			TapCodeInput1 = 0;
@@ -1175,10 +1178,12 @@ public class UbermoduleHandler : MonoBehaviour {
     //KM Mod Settings/Settings for Ubermodule
     public class UberModuleModSettings
     {
-        public double timerdashthreshold = 0.5d;
+        public int timerdashthreshold = 30;
         public bool countIgnoredModules = true;
         public bool generateStagesEarly = true;
         public bool hardModeEnable = false;
+        public bool useLegacyTiming = false;
+        public float dashTimeLengthModern = 0.5f;
     }
     static readonly Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
       {
@@ -1206,6 +1211,16 @@ public class UbermoduleHandler : MonoBehaviour {
                     {
                         { "Key", "hardModeEnable" },
                         { "Text", "Make Übermodule start in hard mode. This requires inputting the ENTIRE sequence of letters to disarm the module for only 1 stage." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "useLegacyTiming" },
+                        { "Text", "Use the legacy timing method instead of the more recent one." }
+                    },
+                    new Dictionary<string, object>
+                    {
+                        { "Key", "dashTimeLengthModern" },
+                        { "Text", "The time it takes to hold for the module to interept a dash instead of a dot." }
                     },
                 } }
             }
