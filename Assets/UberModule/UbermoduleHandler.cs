@@ -25,7 +25,7 @@ public class UbermoduleHandler : MonoBehaviour {
     private bool isFinal = false;
     private int stagesToGenerate = 0;
     private int[] stagesNum;        // A set of stages to get the xth solved module.
-    private string[] InputMethod;   // String determining the input method necessary. "" will be used if neither matches.
+    private string[] InputMethod;   // string determining the input method necessary. "" will be used if neither matches.
     private int currentStage = -1;
     private bool started = false;
 
@@ -41,7 +41,7 @@ public class UbermoduleHandler : MonoBehaviour {
     public float timerdashthres = 0.5f;
     private bool isplayAnim = false;
     private bool stateduringHold = false;
-    private bool countIgnored = true, earlyStageGen, hardModeEnabled = false, useLegacyTiming;
+    private bool countIgnored = true, earlyStageGen, hardModeEnabled = false;
     private bool isCounting = false;
 
     private readonly string[] startupStrings =
@@ -96,8 +96,7 @@ public class UbermoduleHandler : MonoBehaviour {
             countIgnored = modConfig.Settings.countIgnoredModules;
             earlyStageGen = modConfig.Settings.generateStagesEarly;
             hardModeEnabled = modConfig.Settings.hardModeEnable;
-            useLegacyTiming = modConfig.Settings.useLegacyTiming;
-            timerdashthres = useLegacyTiming ? modConfig.Settings.timerdashthreshold : modConfig.Settings.dashTimeLengthModern;
+            timerdashthres = modConfig.Settings.dashTimeLengthModern;
         }
         catch
         {
@@ -106,11 +105,10 @@ public class UbermoduleHandler : MonoBehaviour {
             countIgnored = true;
             earlyStageGen = true;
             hardModeEnabled = false;
-            useLegacyTiming = false;
         }
     }
     void Start() {
-        hardModeEnabled = false;
+        //hardModeEnabled = false;
         component.material.color = hardModeEnabled ? Color.red : Color.white;
         currentlyRunning = PlaySolveState();
         selectable.OnInteract += delegate {
@@ -131,7 +129,7 @@ public class UbermoduleHandler : MonoBehaviour {
         selectable.OnInteractEnded += delegate {
             if (!solved && !isplayAnim && (!stateduringHold))// Detect if the module is solved, playing an animation, or being held while the animation is playing
             {
-                Debug.LogFormat("<Übermodule #{0}> Time held:  {1} {2}.", _moduleId, useLegacyTiming ? timeHeld.ToString() : timeHeld.ToString("0.00"), useLegacyTiming ? "frame(s)" : "second(s)");
+                Debug.LogFormat("<Übermodule #{0}> Time held:  {1} {2}.", _moduleId, timeHeld.ToString("0.00"), "second(s)");
                 isHolding = false;
                 //print (timeHeld);
                 timesHeld.Add(timeHeld);
@@ -212,8 +210,8 @@ public class UbermoduleHandler : MonoBehaviour {
                 "The Very Annoying Button"
             });
         }
-        Debug.LogFormat("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList(ignores));
-        // Prints ENTIRE list of Ignored Modules.
+        //Debug.LogFormat("[Übermodule #{0}] Ignored Module List: {1}", _moduleId, FomatterDebugList(ignores));
+        // Originally, prints ENTIRE list of Ignored Modules.
         // Übermodule: Don't hang bombs with duplicates of THIS
         // Timing is Everything, Time Keeper, Turn The Key: Bomb Timer sensitive, stalling is NOT FUN.
         // Forget Everything, Forget Enigma, Forget Me Not, Forget Perspective, Forget This, Forget Them All, Forget Us Not: Relies on this module to be solved otherwise without Boss Module Manager detecting this.
@@ -222,6 +220,7 @@ public class UbermoduleHandler : MonoBehaviour {
         // Souvenir: Can eat up a lot of time for some reason from Übermodule?
         // Purgatory + Cruel variant: Rare "last" condtion can hang bombs.
         // The Troll: Worst case senario involves The troll and THIS module involving something along the lines of "The Troll still does not ignore boss modules."
+        // There are too many modules to list at this point as of this commit, that I could end up making an entire essay about, which I will not. 
         Info.OnBombExploded += delegate {
             if (solved) return;
             Debug.LogFormat("[Übermodule #{0}] Upon bomb detonation:", _moduleId);
@@ -231,14 +230,9 @@ public class UbermoduleHandler : MonoBehaviour {
                 return;
             }
             if (countIgnored)
-            {
                 Debug.LogFormat("[Übermodule #{0}] The modules solved to this point are: {1}", _moduleId, FomatterDebugList(allSolved));
-            }
             else
-            {
                 Debug.LogFormat("[Übermodule #{0}] The non-ignored modules solved to this point are: {1}", _moduleId, FomatterDebugList(unignoredSolved));
-            }
-
             for (int x = currentStage + 1; x < stagesNum.Count(); x++)
             {
                 if (stagesNum[x] < 0 || stagesNum[x] >= unignoredSolved.Count())
@@ -260,9 +254,7 @@ public class UbermoduleHandler : MonoBehaviour {
             // Section used for debugging solvable modules start here.
             solvables = Info.GetSolvableModuleNames().Where(a => !ignores.Contains(a)).ToList();
             if (!solvables.Any())
-            {
                 Debug.LogFormat("[Übermodule #{0}] There are 0 non-ignored modules.", _moduleId);
-            }
             else
             {
                 Debug.LogFormat("<Übermodule #{0}> All non-ignored Modules: {1}", _moduleId, solvables.Join(",")); // Prints ENTIRE list of modules not ignored.
@@ -320,7 +312,7 @@ public class UbermoduleHandler : MonoBehaviour {
         };
         Debug.LogFormat("[Übermodule #{0}] This module {1} count ignored modules as potential stages.", _moduleId, countIgnored ? "WILL" : "WILL NOT");
         Debug.LogFormat("[Übermodule #{0}] This module will generate stages {1}.", _moduleId, earlyStageGen ? "EARLY" : "LATE");
-        Debug.LogFormat("[Übermodule #{0}] All dashes will be registered on the module when holding for more than {1} {2}.", _moduleId, useLegacyTiming ? timerdashthres.ToString() : timerdashthres.ToString("0.00"), useLegacyTiming ? "frame(s)" : "second(s)");
+        Debug.LogFormat("[Übermodule #{0}] All dashes will be registered on the module when holding for more than {1} {2}.", _moduleId, timerdashthres.ToString("0.00"), "second(s)");
     }
 
     void GenerateLateStages()
@@ -459,7 +451,7 @@ public class UbermoduleHandler : MonoBehaviour {
                     var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
                     if (list2.Count() != unignoredSolved.Count())
                     {
-                        foreach (String A in unignoredSolved)
+                        foreach (string A in unignoredSolved)
                         {
                             list2.Remove(A);
                         }
@@ -469,7 +461,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 }
                 if (list1.Count() != allSolved.Count())
                 {
-                    foreach (String A in allSolved)
+                    foreach (string A in allSolved)
                     {
                         list1.Remove(A);
                     }
@@ -493,7 +485,7 @@ public class UbermoduleHandler : MonoBehaviour {
                 var list2 = list1.Where(a => !ignores.Contains(a)).ToList();
                 if (list2.Count() != unignoredSolved.Count())
                 {
-                    foreach (String A in unignoredSolved)
+                    foreach (string A in unignoredSolved)
                     {
                         list2.Remove(A);
                     }
@@ -528,7 +520,7 @@ public class UbermoduleHandler : MonoBehaviour {
             if (isHolding)
             {
                 if (timeHeld <= timerdashthres)
-                    timeHeld += useLegacyTiming ? 1 : Time.deltaTime;
+                    timeHeld += Time.deltaTime;
             }
             if (started && !isFinal)
             {
@@ -555,13 +547,9 @@ public class UbermoduleHandler : MonoBehaviour {
                 "th"
                 );
             if (InputMethod[currentStage].Equals("Morse"))
-            {
                 Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Morse.", _moduleId);
-            }
             else if (InputMethod[currentStage].Equals("Tap Code"))
-            {
                 Debug.LogFormat("[Übermodule #{0}] You need to input the correct letter in Tap Code.", _moduleId);
-            }
             UpdateScreen((stagesNum[cstage] + 1).ToString());
             Debug.LogFormat("[Übermodule #{0}] The solved module for that stage was: {1}", _moduleId, countIgnored ? allSolved[stagesNum[cstage]] : unignoredSolved[stagesNum[cstage]]);
         }
@@ -1178,11 +1166,9 @@ public class UbermoduleHandler : MonoBehaviour {
     //KM Mod Settings/Settings for Ubermodule
     public class UberModuleModSettings
     {
-        public int timerdashthreshold = 30;
         public bool countIgnoredModules = true;
         public bool generateStagesEarly = true;
         public bool hardModeEnable = false;
-        public bool useLegacyTiming = false;
         public float dashTimeLengthModern = 0.5f;
     }
     static readonly Dictionary<string, object>[] TweaksEditorSettings = new Dictionary<string, object>[]
@@ -1199,11 +1185,6 @@ public class UbermoduleHandler : MonoBehaviour {
                     },
                     new Dictionary<string, object>
                     {
-                        { "Key", "timerdashthreshold" },
-                        { "Text", "The time it takes to hold for the module to interept a dash instead of a dot." }
-                    },
-                    new Dictionary<string, object>
-                    {
                         { "Key", "generateStagesEarly" },
                         { "Text", "Generates stages for Ubermodule as early as possible. This only considers solvable modules on the bomb, rather than all stages." }
                     },
@@ -1211,11 +1192,6 @@ public class UbermoduleHandler : MonoBehaviour {
                     {
                         { "Key", "hardModeEnable" },
                         { "Text", "Make Übermodule start in hard mode. This requires inputting the ENTIRE sequence of letters to disarm the module for only 1 stage." }
-                    },
-                    new Dictionary<string, object>
-                    {
-                        { "Key", "useLegacyTiming" },
-                        { "Text", "Use the legacy timing method instead of the more recent one." }
                     },
                     new Dictionary<string, object>
                     {
@@ -1427,6 +1403,8 @@ public class UbermoduleHandler : MonoBehaviour {
         yield return null;
         solved = true;
         UpdateScreen(forceSolveTexts[uernd.Range(0,forceSolveTexts.Count())]);
+        StopAllCoroutines();
+        enabled = false;
         Debug.LogFormat("[Übermodule #{0}] Module forced-solved viva TP solve command.", _moduleId);
     }
 }
